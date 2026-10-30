@@ -35,6 +35,7 @@ const paraResumo = (c: ConversaoView): ResumoConversao => ({
   createdAt: c.createdAt,
   variacao: c.resultado.totais.variacao,
   exemplo: c.exemplo,
+  fonte: c.fonte,
 });
 
 export function Conversor(props: Props) {
