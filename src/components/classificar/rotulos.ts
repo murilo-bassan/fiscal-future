@@ -4,6 +4,7 @@ import type { Confianca } from "@/lib/classificador";
 export const ROTULO_REDUCAO: Record<Reducao, string> = {
   padrao: "Padrão",
   reducao30: "−30%",
+  reducao40: "−40%",
   reducao60: "−60%",
   zero: "Zero",
 };

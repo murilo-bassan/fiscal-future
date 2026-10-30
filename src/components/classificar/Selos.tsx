@@ -5,6 +5,7 @@ import { ROTULO_CONFIANCA, ROTULO_REDUCAO } from "./rotulos";
 const COR_REDUCAO: Record<Reducao, string> = {
   padrao: "border-line bg-paper text-ink",
   reducao30: "border-transparent bg-accent-soft text-ink",
+  reducao40: "border-transparent bg-accent-soft text-ink",
   reducao60: "border-transparent bg-brand-soft text-brand-strong",
   zero: "border-transparent bg-good-soft text-good",
 };

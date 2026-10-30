@@ -110,6 +110,7 @@ export const ANOS = TRANSICAO.map((t) => t.ano);
 export const REDUCOES = {
   padrao: { reducao: 0, nome: "Alíquota padrão" },
   reducao30: { reducao: 0.3, nome: "Redução de 30% (profissões regulamentadas)" },
+  reducao40: { reducao: 0.4, nome: "Redução de 40% (bares, restaurantes, hotelaria, turismo, transporte intermunicipal)" },
   reducao60: { reducao: 0.6, nome: "Redução de 60% (saúde, educação, alimentos, insumos agro etc.)" },
   zero: { reducao: 1, nome: "Alíquota zero (cesta básica nacional, alguns medicamentos etc.)" },
 } as const;

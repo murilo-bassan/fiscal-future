@@ -19,6 +19,8 @@ model User {
   createdAt            DateTime        @default(now())
   empresas             Empresa[]
   classificacoes       Classificacao[]
+  notas                NotaFiscal[]
+  conversoes           ConversaoNota[]
 }
 
 model Empresa {
@@ -32,7 +34,71 @@ model Empresa {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Dados fiscais para emissão (opcionais até a empresa emitir a primeira nota)
+  razaoSocial        String?
+  inscricaoEstadual  String?
+  inscricaoMunicipal String?
+  crt                String? // 1 Simples, 2 Simples excesso de sublimite, 3 regime normal, 4 MEI
+  endereco           String? // JSON: logradouro, numero, bairro, cep, municipio, codigoMunicipio, uf
+  aliquotaIcmsPadrao Float? // fração, usada como sugestão nos itens de NF-e
+  aliquotaIssPadrao  Float?
+  ambiente           String  @default("homologacao") // homologacao | producao
+  provedor           String  @default("simulado") // simulado | focus
+  provedorToken      String? // criptografado (src/lib/cripto.ts)
+  serieNfe           String  @default("1")
+
+  notas      NotaFiscal[]
+  conversoes ConversaoNota[]
+
   @@index([userId])
+}
+
+model NotaFiscal {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresaId    String
+  empresa      Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo         String // nfe | nfse
+  ref          String   @unique // referência idempotente enviada ao provedor
+  provedor     String
+  ambiente     String
+  status       String // processando | autorizada | rejeitada | cancelada | erro
+  numero       String?
+  serie        String?
+  chave        String?
+  protocolo    String?
+  mensagem     String?
+  payload      String // JSON de RascunhoNota (src/lib/emissao/tipos.ts)
+  calculo      String // JSON de CalculoRascunho
+  xml          String? // XML autorizado (ou simulado)
+  xmlUrl       String?
+  danfeUrl     String?
+  valorTotal   Float
+  ibsCbsTotal  Float
+  origemChave  String? // chave da nota antiga, quando veio de uma conversão
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([empresaId, createdAt])
+}
+
+model ConversaoNota {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresaId  String?
+  empresa    Empresa? @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+  chave      String
+  numero     String
+  emitente   String
+  ano        Int
+  resultado  String // JSON de NotaConvertida sem o campo xml (recalculável)
+  xmlOriginal String // XML da nota antiga, para reconverter com outras escolhas
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Classificacao {

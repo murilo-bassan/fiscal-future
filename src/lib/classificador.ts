@@ -12,7 +12,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { CATEGORIAS, REGIMES_ESPECIFICOS, buscarCategoria, type Categoria } from "./tax/categorias";
+import {
+  CATEGORIA_PADRAO,
+  CATEGORIAS,
+  REGIMES_ESPECIFICOS,
+  buscarCategoria,
+  type Categoria,
+} from "./tax/categorias";
 import { REDUCOES, type Reducao } from "./tax/params";
 
 /*
@@ -54,13 +60,6 @@ export type ResultadoClassificacao = {
   itens: ItemClassificado[];
   /** Aviso para o usuário, ex.: quando a IA falhou e usamos palavras-chave. */
   aviso?: string;
-};
-
-const CATEGORIA_PADRAO: Categoria = CATEGORIAS.find((c) => c.id === "padrao") ?? {
-  id: "padrao",
-  nome: "Demais bens e serviços (alíquota padrão)",
-  reducao: "padrao",
-  exemplos: [],
 };
 
 const POR_ID = new Map(CATEGORIAS.map((c) => [c.id, c]));
@@ -288,7 +287,7 @@ export function classificarPorPalavrasChave(descricao: string): ItemClassificado
 
   // Várias categorias com reduções diferentes: fica com a de MENOR redução
   // (errar para mais imposto é mais seguro) e confiança baixa.
-  const ordem: Reducao[] = ["padrao", "reducao30", "reducao60", "zero"];
+  const ordem: Reducao[] = ["padrao", "reducao30", "reducao40", "reducao60", "zero"];
   const escolhida = [...candidatas].sort((a, b) => ordem.indexOf(a.reducao) - ordem.indexOf(b.reducao))[0];
   const ambigua = reducoes.size > 1;
 
