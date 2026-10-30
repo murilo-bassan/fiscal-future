@@ -8,19 +8,26 @@ datasource db {
 }
 
 model User {
-  id                   String          @id @default(cuid())
-  email                String          @unique
+  id                   String            @id @default(cuid())
+  email                String            @unique
   nome                 String
   senhaHash            String
-  plano                String          @default("gratis") // gratis | essencial | profissional | contador
-  stripeCustomerId     String?         @unique
+  plano                String            @default("gratis") // gratis | essencial | profissional | contador
+  stripeCustomerId     String?           @unique
   stripeSubscriptionId String?
   escritorio           String? // nome exibido nos relatórios (plano contador)
-  createdAt            DateTime        @default(now())
+  // Incrementado ao trocar a senha ou "sair de todos os dispositivos": invalida as sessões antigas
+  sessaoVersao         Int               @default(0)
+  totpSegredo          String? // criptografado (src/lib/cripto.ts); pendente até totpAtivo
+  totpAtivo            Boolean           @default(false)
+  totpUltimoPasso      Int? // último passo TOTP aceito: impede reusar o mesmo código
+  createdAt            DateTime          @default(now())
   empresas             Empresa[]
   classificacoes       Classificacao[]
   notas                NotaFiscal[]
   conversoes           ConversaoNota[]
+  tokensSenha          TokenSenha[]
+  eventos              EventoAuditoria[]
 }
 
 model Empresa {
@@ -77,6 +84,7 @@ model NotaFiscal {
   valorTotal   Float
   ibsCbsTotal  Float
   origemChave  String? // chave da nota antiga, quando veio de uma conversão
+  destinatario String? // nome do destinatário (cópia do payload, para busca e ranking)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -85,21 +93,21 @@ model NotaFiscal {
 }
 
 model ConversaoNota {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  empresaId  String?
-  empresa    Empresa? @relation(fields: [empresaId], references: [id], onDelete: SetNull)
-  chave      String
-  numero     String
-  emitente   String
-  ano        Int
-  resultado  String // JSON de NotaConvertida sem o campo xml (recalculável)
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresaId   String?
+  empresa     Empresa? @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+  chave       String
+  numero      String
+  emitente    String
+  ano         Int
+  resultado   String // JSON de NotaConvertida sem o campo xml (recalculável)
   fonte       String   @default("xml") // xml | manual | documento | planilha (FonteNota)
   // Conteúdo original para reconverter com outras escolhas: o XML (fonte "xml")
   // ou o JSON de NotaManualEntrada (src/lib/nfe/entrada.ts) nas demais fontes.
   xmlOriginal String
-  createdAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([userId, createdAt])
 }
@@ -110,6 +118,46 @@ model Classificacao {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   descricao String
   resultado String // JSON
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+/**
+ * Link de redefinição de senha. Guardamos só o SHA-256 do token.
+ */
+model TokenSenha {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hash      String    @unique
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/**
+ * Contador de tentativas por janela (src/lib/limite.ts). Vale entre instâncias do servidor.
+ */
+model LimiteTaxa {
+  chave      String   @id
+  contador   Int
+  reiniciaEm DateTime
+}
+
+/**
+ * Ações sensíveis: login, senha, 2FA, emissão, cancelamento, dados fiscais.
+ */
+model EventoAuditoria {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresaId String?
+  acao      String
+  detalhe   String?
+  ip        String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
