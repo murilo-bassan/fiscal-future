@@ -192,3 +192,20 @@ export function checarLimite(usadas: number, limite: number): { ok: true } | { o
 
 /** Status que contam no limite do mês: tudo menos "erro" (falha antes de chegar à SEFAZ/prefeitura). */
 export const STATUS_QUE_CONTAM = ["processando", "autorizada", "rejeitada", "cancelada"] as const;
+
+/** Idade mínima para a rotina periódica consultar uma nota "processando" (dá tempo ao provedor). */
+export const IDADE_MINIMA_PENDENTE_MS = 60_000;
+
+/**
+ * Notas pendentes para a rotina periódica: "processando", criadas há mais de 1 minuto,
+ * as mais antigas primeiro. Ordenar por updatedAt (a última consulta) antes de createdAt
+ * manda para o fim da fila a nota que não se resolve (ex.: empresa sem dados fiscais),
+ * sem travar as outras.
+ */
+export function criterioPendentes(limite: number, agora = new Date()) {
+  return {
+    where: { status: "processando", createdAt: { lt: new Date(agora.getTime() - IDADE_MINIMA_PENDENTE_MS) } },
+    orderBy: [{ updatedAt: "asc" as const }, { createdAt: "asc" as const }],
+    take: Math.max(1, Math.min(100, Math.floor(limite) || 1)),
+  };
+}

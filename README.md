@@ -19,6 +19,15 @@ npm test                   # testes do motor tributário
 Sem `ANTHROPIC_API_KEY`, a classificação de produtos usa busca por palavras-chave.
 Sem `STRIPE_SECRET_KEY`, o checkout fica em modo demonstração (só fora de produção).
 
+Notas "processando" se resolvem sozinhas de dois jeitos:
+
+- **Webhook do Focus** (`/api/focus/webhook`): defina `FOCUS_WEBHOOK_SECRET` e crie no painel do Focus
+  um gatilho para essa URL com o header `Authorization` igual ao segredo. O corpo do aviso só fornece a ref;
+  o status é sempre consultado de novo no Focus.
+- **Rotina periódica** (`/api/cron`, a cada 10 minutos pelo `vercel.json`): defina `CRON_SECRET`.
+  Consulta até 20 notas pendentes e apaga contadores de tentativas e links de senha vencidos.
+  Fora da Vercel, chame `GET /api/cron` com `Authorization: Bearer $CRON_SECRET`.
+
 ## Estrutura
 
 | Caminho | O que é |
@@ -28,6 +37,7 @@ Sem `STRIPE_SECRET_KEY`, o checkout fica em modo demonstração (só fora de pro
 | `src/app/(auth)`, `src/app/app` | Cadastro, login e área logada |
 | `src/app/api/classificar` | Classificação de produtos com Claude |
 | `src/app/api/checkout`, `api/stripe/webhook` | Assinaturas |
+| `src/app/api/focus/webhook`, `api/cron` | Aviso de status do Focus NFe e rotina periódica |
 | `src/lib/nfe/` | Leitura de NF-e, cálculo de IBS/CBS por item, conversão e XML no layout novo |
 | `src/lib/emissao/` | Contrato de emissão, cálculo do rascunho e provedores (simulado, Focus NFe) |
 

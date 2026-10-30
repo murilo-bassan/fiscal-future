@@ -8,6 +8,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { Empresa, NotaFiscal } from "@prisma/client";
+import { registrar } from "../auditoria";
 import { db } from "../db";
 import { plano } from "../planos";
 import { DEFAULT_CENARIO, PRESETS } from "../tax/params";
@@ -16,6 +17,7 @@ import { emitenteDaEmpresa } from "./emitente";
 import { provedor } from "./provedores";
 import {
   checarLimite,
+  criterioPendentes,
   gerarRef,
   inicioDoMes,
   validarJustificativa,
@@ -32,7 +34,7 @@ export type FalhaServico = {
   faltando?: string[];
   upgrade?: boolean;
 };
-export type SucessoServico = { ok: true; notaId: string; status: StatusNota; mensagem?: string };
+export type SucessoServico = { ok: true; notaId: string; status: StatusNota; mensagem?: string; numero?: string };
 export type ResultadoServico = SucessoServico | FalhaServico;
 
 const cenario = (id: string) => PRESETS.find((p) => p.id === id) ?? DEFAULT_CENARIO;
@@ -78,10 +80,21 @@ async function enviar(
     res = { status: "erro", mensagem: "Falha inesperada ao enviar a nota. Tente de novo em instantes." };
   }
   await gravar(nota.id, res);
-  return { ok: true, notaId: nota.id, status: res.status, mensagem: res.mensagem };
+  return { ok: true, notaId: nota.id, status: res.status, mensagem: res.mensagem, numero: res.numero };
 }
 
-export async function emitirNota(userId: string, empresaId: string, dados: unknown): Promise<ResultadoServico> {
+/** Detalhe curto para a auditoria: tipo, número (quando já existe), ref e status. */
+function detalheNota(tipo: string, ref: string, numero?: string | null, status?: string) {
+  const doc = tipo === "nfse" ? "NFS-e" : "NF-e";
+  return [`${doc}${numero ? ` nº ${numero}` : ""}`, `ref ${ref}`, status].filter(Boolean).join(" · ");
+}
+
+export async function emitirNota(
+  userId: string,
+  empresaId: string,
+  dados: unknown,
+  ip?: string | null,
+): Promise<ResultadoServico> {
   const v = validarRascunho(dados);
   if (!v.ok) {
     return { ok: false, erro: "Alguns campos precisam de ajuste.", erros: v.erros, mensagens: v.mensagens };
@@ -118,7 +131,13 @@ export async function emitirNota(userId: string, empresaId: string, dados: unkno
     select: { id: true, ref: true },
   });
 
-  return enviar(nota, e, rascunho, calculo);
+  const r = await enviar(nota, e, rascunho, calculo);
+  await registrar(userId, "nota_emitida", {
+    empresaId: empresa.id,
+    detalhe: detalheNota(rascunho.tipo, nota.ref, r.numero, r.status),
+    ip,
+  });
+  return r;
 }
 
 async function notaDoUsuario(userId: string, notaId: string) {
@@ -136,7 +155,7 @@ function emitenteDaNota(nota: NotaFiscal & { empresa: Empresa }): EmitenteFiscal
  * Nova tentativa de uma nota que deu "erro" (ex.: dados fiscais corrigidos).
  * Reusa a mesma ref: se o envio anterior chegou ao provedor, ele não duplica.
  */
-export async function retentarNota(userId: string, notaId: string): Promise<ResultadoServico> {
+export async function retentarNota(userId: string, notaId: string, ip?: string | null): Promise<ResultadoServico> {
   const nota = await notaDoUsuario(userId, notaId);
   if (!nota) return { ok: false, erro: "Nota não encontrada." };
   if (nota.status !== "erro") return { ok: false, erro: "Só dá para tentar de novo uma nota com erro." };
@@ -164,12 +183,56 @@ export async function retentarNota(userId: string, notaId: string): Promise<Resu
       ibsCbsTotal: calculo.totais.ibsCbs,
     },
   });
-  return enviar(nota, e, v.rascunho, calculo);
+  const r = await enviar(nota, e, v.rascunho, calculo);
+  await registrar(userId, "nota_retentada", {
+    empresaId: nota.empresaId,
+    detalhe: detalheNota(nota.tipo, nota.ref, r.numero ?? nota.numero, r.status),
+    ip,
+  });
+  return r;
 }
 
 export async function atualizarStatus(userId: string, notaId: string): Promise<ResultadoServico> {
   const nota = await notaDoUsuario(userId, notaId);
   if (!nota) return { ok: false, erro: "Nota não encontrada." };
+  return consultarEGravar(nota);
+}
+
+/**
+ * Webhook do provedor: só a ref vem de fora. O status nunca é lido do corpo do aviso;
+ * a nota é consultada de novo no provedor.
+ */
+export async function atualizarStatusPorRef(ref: string): Promise<ResultadoServico> {
+  const nota = await db.notaFiscal.findUnique({ where: { ref }, include: { empresa: true } });
+  if (!nota) return { ok: false, erro: "Nota não encontrada." };
+  return consultarEGravar(nota);
+}
+
+export type ResumoPendentes = { consultadas: number; resolvidas: number; falhas: number };
+
+/** Rotina periódica: consulta as notas "processando" mais antigas, no máximo `limite` por vez. */
+export async function atualizarPendentes(limite: number): Promise<ResumoPendentes> {
+  const notas = await db.notaFiscal.findMany({ ...criterioPendentes(limite), include: { empresa: true } });
+  const resumo: ResumoPendentes = { consultadas: notas.length, resolvidas: 0, falhas: 0 };
+  // Uma por vez: não dispara rajadas no provedor
+  for (const nota of notas) {
+    const r = await consultarEGravar(nota).catch((err): FalhaServico => ({
+      ok: false,
+      erro: err instanceof Error ? err.message : "erro desconhecido",
+    }));
+    if (r.ok && r.status !== "processando") resumo.resolvidas++;
+    if (!r.ok) {
+      resumo.falhas++;
+      console.error("[emissao] pendente sem consulta", nota.id, r.erro);
+      // Vai para o fim da fila (criterioPendentes ordena por updatedAt)
+      await db.notaFiscal.update({ where: { id: nota.id }, data: { updatedAt: new Date() } }).catch(() => {});
+    }
+  }
+  return resumo;
+}
+
+/** Consulta o provedor e grava o resultado. Quem chama já conferiu o acesso à nota. */
+async function consultarEGravar(nota: NotaFiscal & { empresa: Empresa }): Promise<ResultadoServico> {
   const e = emitenteDaNota(nota);
   if ("ok" in e) return e;
 
@@ -186,7 +249,12 @@ export async function atualizarStatus(userId: string, notaId: string): Promise<R
   return { ok: true, notaId: nota.id, status: manter ? (nota.status as StatusNota) : res.status, mensagem: res.mensagem };
 }
 
-export async function cancelarNota(userId: string, notaId: string, justificativa: string): Promise<ResultadoServico> {
+export async function cancelarNota(
+  userId: string,
+  notaId: string,
+  justificativa: string,
+  ip?: string | null,
+): Promise<ResultadoServico> {
   const j = validarJustificativa(justificativa);
   if (!j.ok) return { ok: false, erro: j.erro };
 
@@ -207,5 +275,10 @@ export async function cancelarNota(userId: string, notaId: string, justificativa
     return { ok: false, erro: res.mensagem ?? "O cancelamento não foi aceito." };
   }
   await gravar(nota.id, res);
+  await registrar(userId, "nota_cancelada", {
+    empresaId: nota.empresaId,
+    detalhe: detalheNota(nota.tipo, nota.ref, nota.numero),
+    ip,
+  });
   return { ok: true, notaId: nota.id, status: "cancelada", mensagem: res.mensagem };
 }
