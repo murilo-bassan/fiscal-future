@@ -6,7 +6,8 @@ import { plano } from "@/lib/planos";
 import { emitenteDaEmpresa, lerEndereco } from "@/lib/emissao/emitente";
 import { notasNoMes } from "@/lib/emissao/servico";
 import type { RascunhoNota } from "@/lib/emissao/tipos";
-import { converterNota, lerNota, rascunhoDeConversao } from "@/lib/nfe";
+import { converterNota, rascunhoDeConversao } from "@/lib/nfe";
+import { notaDoRegistro } from "@/app/api/converter/_lib/servico";
 import { ConviteDadosFiscais, ConviteUpgrade } from "@/components/notas/Convites";
 import { FormNota } from "@/components/notas/FormNota";
 import { FaixaSemValor } from "@/components/notas/Selos";
@@ -20,11 +21,12 @@ type Origem = { rascunho?: RascunhoNota; aviso?: string; alerta?: string };
 async function rascunhoDaConversao(conversaoId: string, userId: string, cnpjEmpresa: string | null, ano: number): Promise<Origem> {
   const c = await db.conversaoNota.findFirst({
     where: { id: conversaoId, userId },
-    select: { xmlOriginal: true, resultado: true, numero: true },
+    select: { xmlOriginal: true, fonte: true, resultado: true, numero: true },
   });
   if (!c) return { alerta: "Não encontramos essa conversão. Comece a nota do zero." };
   try {
-    const nota = lerNota(c.xmlOriginal);
+    // XML ou dados da nota (digitada, PDF/foto, planilha)
+    const nota = notaDoRegistro(c);
     // Mantém as classificações que o usuário escolheu na conversão
     const classificacoes: Record<number, string> = {};
     try {

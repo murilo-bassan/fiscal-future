@@ -11,6 +11,8 @@ import type { ItemConvertido, NotaConvertida, OrigemClassificacao } from "../../
 import { CATEGORIAS } from "../../lib/tax/categorias";
 import { PRESETS, REDUCOES } from "../../lib/tax/params";
 import { gerarCsv } from "../../lib/csv";
+import type { FonteNota } from "../../lib/nfe/parser";
+import type { NotaManualEntrada } from "../../lib/nfe/entrada";
 
 /* ------------------------------------------------------------- anos ---- */
 
@@ -71,6 +73,26 @@ export const ajusteSchema = z
 
 export type Ajuste = z.infer<typeof ajusteSchema>;
 
+/** Máximo de notas digitadas (JSON) ou de uma planilha num envio. */
+export const MAX_NOTAS_ENVIO = MAX_ARQUIVOS;
+
+/**
+ * Corpo JSON do POST para notas digitadas. As notas são validadas uma a uma
+ * depois (notaManualSchema), para um erro não derrubar o lote.
+ */
+export const envioManualSchema = envioSchema.extend({
+  fonte: z.literal("manual", { error: "Fonte inválida." }),
+  nota: z.union([z.array(z.unknown()).min(1, "Inclua pelo menos uma nota.").max(MAX_NOTAS_ENVIO, `Envie no máximo ${MAX_NOTAS_ENVIO} notas por vez.`), z.record(z.string(), z.unknown())]),
+});
+
+/** De onde veio cada conversão, para o histórico e o selo do resultado. */
+export const ROTULO_FONTE: Record<FonteNota, string> = {
+  xml: "XML",
+  documento: "PDF ou foto",
+  manual: "Digitada",
+  planilha: "Planilha",
+};
+
 /** Confere nome e tamanho de um arquivo enviado. Devolve a mensagem de erro, ou null. */
 export function validarArquivo(f: { name: string; size: number; type?: string }): string | null {
   if (!/\.xml$/i.test(f.name)) return "Envie arquivos .xml de NF-e ou NFC-e.";
@@ -118,6 +140,9 @@ export type ConversaoView = {
   empresaId: string | null;
   createdAt: string;
   exemplo: boolean;
+  fonte: FonteNota;
+  /** Dados da nota sem XML, para o formulário de correção. Null quando veio de XML. */
+  entrada: NotaManualEntrada | null;
   resultado: ResultadoSalvo;
 };
 
@@ -129,6 +154,7 @@ export type ResumoConversao = {
   createdAt: string;
   variacao: number | null;
   exemplo: boolean;
+  fonte: FonteNota;
 };
 
 const AVISO_CONFERIR = /de conferência da classificação/;
@@ -179,6 +205,33 @@ export function mesclarEscolhas(
   const validos = new Set(itensValidos.map(String));
   for (const [n, categoriaId] of Object.entries(doUsuario ?? {})) {
     if (validos.has(n)) r[n] = { categoriaId, origem: "usuario" };
+  }
+  return r;
+}
+
+const descricaoNormal = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+/**
+ * Depois de corrigir os dados de uma nota (PUT), mantém a escolha de cada item
+ * só se o item com aquele número continua sendo o mesmo (mesma descrição).
+ * Itens novos ou trocados voltam a ser classificados pelo conversor.
+ */
+export function escolhasMantidas(
+  escolhas: Record<string, Escolha>,
+  itensAntes: { nItem: number; descricao: string }[],
+  itensDepois: { nItem: number; descricao: string }[],
+): Record<string, Escolha> {
+  const antes = new Map(itensAntes.map((i) => [String(i.nItem), descricaoNormal(i.descricao)]));
+  const r: Record<string, Escolha> = {};
+  for (const it of itensDepois) {
+    const n = String(it.nItem);
+    if (escolhas[n] && antes.get(n) === descricaoNormal(it.descricao)) r[n] = escolhas[n];
   }
   return r;
 }

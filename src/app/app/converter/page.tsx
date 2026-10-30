@@ -19,7 +19,7 @@ export default async function ConverterPage() {
       where: { userId: u.id },
       orderBy: { createdAt: "desc" },
       take: 20,
-      select: { id: true, numero: true, emitente: true, ano: true, createdAt: true, chave: true, resultado: true },
+      select: { id: true, numero: true, emitente: true, ano: true, createdAt: true, chave: true, resultado: true, fonte: true },
     }),
   ]);
 

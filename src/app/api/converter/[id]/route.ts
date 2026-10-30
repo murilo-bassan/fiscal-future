@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { ErroLeituraNota } from "@/lib/nfe";
-import { ajusteSchema, lerResultadoSalvo, mesclarEscolhas } from "@/components/conversor/modelo";
-import { cenarioPorId, conversaoDoUsuario, exigirSessao, naoEncontrada, paraView, reconverter } from "../_lib/servico";
+import { z } from "zod";
+import { ErroLeituraNota, notaDeEntrada, notaManualSchema } from "@/lib/nfe";
+import { ajusteSchema, escolhasMantidas, lerResultadoSalvo, mesclarEscolhas } from "@/components/conversor/modelo";
+import {
+  cenarioPorId,
+  conteudoOriginal,
+  conversaoDoUsuario,
+  exigirSessao,
+  fonteDe,
+  naoEncontrada,
+  paraView,
+  reconverter,
+} from "../_lib/servico";
 
 export const runtime = "nodejs";
 
@@ -85,4 +95,71 @@ export async function PATCH(req: Request, { params }: Ctx) {
   return NextResponse.json(
     paraView({ ...r, empresaId: empresaId !== undefined ? empresaId : r.empresaId }, resultado),
   );
+}
+
+const correcaoSchema = z.object({ nota: z.unknown() });
+
+/**
+ * PUT { nota: NotaManualEntrada }: corrige os dados de uma conversão sem XML
+ * (ex.: um valor que a IA leu errado do PDF) e reconverte. As escolhas de
+ * categoria continuam valendo para os itens que não mudaram de descrição.
+ * Não conta outra conversão no limite do mês.
+ */
+export async function PUT(req: Request, { params }: Ctx) {
+  const { u, erro } = await exigirSessao();
+  if (!u) return erro;
+  const { id } = await params;
+
+  if (Number(req.headers.get("content-length") ?? 0) > 1024 * 1024) {
+    return NextResponse.json({ erro: "Envio grande demais." }, { status: 413 });
+  }
+  let corpo: unknown;
+  try {
+    corpo = await req.json();
+  } catch {
+    return NextResponse.json({ erro: "Corpo da requisição inválido." }, { status: 400 });
+  }
+  const envio = correcaoSchema.safeParse(corpo);
+  if (!envio.success) return NextResponse.json({ erro: "Envie os dados da nota." }, { status: 400 });
+  const m = notaManualSchema.safeParse(envio.data.nota);
+  if (!m.success) {
+    const campos: Record<string, string> = {};
+    for (const i of m.error.issues) campos[i.path.join(".")] ??= i.message;
+    return NextResponse.json({ erro: "Confira os campos marcados.", campos }, { status: 400 });
+  }
+
+  const r = await conversaoDoUsuario(id, u.id);
+  if (!r) return naoEncontrada();
+  const fonte = fonteDe(r.fonte);
+  if (fonte === "xml") {
+    return NextResponse.json(
+      { erro: "Notas enviadas em XML não podem ser corrigidas aqui: o XML é o documento original." },
+      { status: 409 },
+    );
+  }
+
+  const nota = notaDeEntrada(m.data, fonte);
+  let resultado;
+  try {
+    const salvo = lerResultadoSalvo(r.resultado);
+    const escolhas = escolhasMantidas(salvo?.escolhas ?? {}, salvo?.itens ?? [], nota.itens);
+    resultado = reconverter(r, { nota, escolhas }).resultado;
+  } catch (err) {
+    console.error("[converter] falha ao corrigir", id, err);
+    return NextResponse.json({ erro: "Não foi possível recalcular esta nota." }, { status: 500 });
+  }
+
+  const xmlOriginal = conteudoOriginal(nota);
+  const dados = {
+    chave: nota.chave.slice(0, 60),
+    numero: nota.numero.slice(0, 20),
+    emitente: (nota.emitente.nome || nota.emitente.documento).slice(0, 200),
+    ano: resultado.ano,
+    resultado: JSON.stringify(resultado),
+    xmlOriginal,
+  };
+  const n = await db.conversaoNota.updateMany({ where: { id: r.id, userId: u.id }, data: dados });
+  if (n.count === 0) return naoEncontrada();
+
+  return NextResponse.json(paraView({ ...r, ...dados }, resultado));
 }
