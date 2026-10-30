@@ -28,6 +28,38 @@ Notas "processando" se resolvem sozinhas de dois jeitos:
   Consulta até 20 notas pendentes e apaga contadores de tentativas e links de senha vencidos.
   Fora da Vercel, chame `GET /api/cron` com `Authorization: Bearer $CRON_SECRET`.
 
+## Segurança
+
+- **Sessão** em cookie httpOnly assinado (JWT HS256). Trocar a senha ou usar "Sair de todos os
+  aparelhos" incrementa `User.sessaoVersao` e derruba as outras sessões.
+- **Verificação em duas etapas** (TOTP, qualquer app autenticador). O segredo é criptografado com `ENCRYPTION_KEY`,
+  e o mesmo código não é aceito duas vezes.
+- **Limite de tentativas** no banco (`src/lib/limite.ts`) para login, cadastro, código 2FA, recuperação de senha,
+  IA e emissão. Funciona com várias instâncias do servidor.
+- **Recuperação de senha** por link de uso único válido por 1 hora (só o SHA-256 vai para o banco).
+- **Headers** CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy e Permissions-Policy (`next.config.ts`).
+- **Isolamento:** toda consulta filtra por `userId`. Os tokens do emissor ficam criptografados (AES-256-GCM).
+- **Auditoria:** login, senha, 2FA, emissão, cancelamento, dados fiscais e exclusões vão para `EventoAuditoria`,
+  e o usuário vê esses eventos em Conta.
+- **LGPD:** em Conta, o usuário exporta os próprios dados (JSON) e exclui a conta, o que também cancela a assinatura no Stripe.
+
+## Antes de ir para produção (depende de pessoas)
+
+1. **Banco:** trocar o SQLite por Postgres gerenciado (Neon, Supabase, RDS), com backup diário e restauração
+   point-in-time. Em `prisma/schema.prisma`, mude `provider` para `"postgresql"` e gere uma migração inicial nova
+   (as atuais são SQLite). A migração `seguranca_auditoria` usa `json_extract`, que só existe no SQLite.
+2. **Hospedagem:** Vercel Pro (o conversor usa `maxDuration = 300`, e o cron de 10 em 10 minutos exige o Pro).
+   Configure as variáveis do `.env.example`, com `AUTH_SECRET` e `ENCRYPTION_KEY` novas e guardadas num cofre.
+3. **Domínio e e-mail:** domínio próprio, conta no Resend com o domínio verificado (SPF/DKIM) e `EMAIL_FROM`.
+4. **Focus NFe:** contrato (de preferência como revenda), certificado A1 de cada empresa cadastrado no Focus,
+   gatilho do webhook e testes em homologação em cada UF e município atendido.
+5. **Stripe:** conta ativada, produtos e preços, webhook apontando para `/api/stripe/webhook`.
+6. **Jurídico:** advogado revisa Termos e Privacidade (responsabilidade pelo conteúdo das notas, limitação de
+   responsabilidade, papel de operador de dados para escritórios contábeis), indica o encarregado (DPO) e o canal LGPD.
+7. **Monitoramento:** Sentry (ou similar) para erros, alerta de notas presas em "processando" e de webhooks com falha.
+8. **Pentest** externo antes de abrir para clientes pagantes.
+9. **Alíquota da CBS:** atualizar `src/lib/tax/params.ts` quando o Senado publicar o valor (prazo: 15/12/2026).
+
 ## Estrutura
 
 | Caminho | O que é |
@@ -38,6 +70,8 @@ Notas "processando" se resolvem sozinhas de dois jeitos:
 | `src/app/api/classificar` | Classificação de produtos com Claude |
 | `src/app/api/checkout`, `api/stripe/webhook` | Assinaturas |
 | `src/app/api/focus/webhook`, `api/cron` | Aviso de status do Focus NFe e rotina periódica |
+| `src/lib/auth.ts`, `limite.ts`, `totp.ts`, `senha.ts`, `auditoria.ts` | Sessão, limite de tentativas, 2FA, links de senha e auditoria |
+| `src/lib/painel.ts` | Agregações do dashboard de notas |
 | `src/lib/nfe/` | Leitura de NF-e, cálculo de IBS/CBS por item, conversão e XML no layout novo |
 | `src/lib/emissao/` | Contrato de emissão, cálculo do rascunho e provedores (simulado, Focus NFe) |
 
