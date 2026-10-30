@@ -43,3 +43,6 @@ next-env.d.ts
 # sqlite
 /prisma/*.db*
 !.env.example
+
+# anotações locais
+/other
