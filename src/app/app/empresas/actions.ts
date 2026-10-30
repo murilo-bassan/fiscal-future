@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { registrar } from "@/lib/auditoria";
 import { exigirUsuario } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { ipDe } from "@/lib/limite";
 import { plano } from "@/lib/planos";
 import { PRESETS, perfilSchema, type PerfilEmpresa } from "@/lib/tax";
 import { CAMPOS_NUMERICOS } from "@/components/app/camposPerfil";
@@ -130,7 +133,16 @@ export async function atualizarEmpresa(
 
 export async function excluirEmpresa(id: string) {
   const u = await exigirUsuario();
-  await db.empresa.deleteMany({ where: { id, userId: u.id } });
+  const empresa = await db.empresa.findFirst({ where: { id, userId: u.id }, select: { nome: true, cnpj: true } });
+  const { count } = await db.empresa.deleteMany({ where: { id, userId: u.id } });
+  if (count > 0 && empresa) {
+    // A empresa some; o nome vai no detalhe para o histórico continuar legível
+    await registrar(u.id, "empresa_excluida", {
+      empresaId: id,
+      detalhe: [empresa.nome, empresa.cnpj].filter(Boolean).join(" · "),
+      ip: ipDe(await headers()),
+    });
+  }
   revalidatePath("/app");
   redirect("/app");
 }

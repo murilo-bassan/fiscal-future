@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { exigirUsuario } from "@/lib/auth";
-import { consumir, mensagemLimite } from "@/lib/limite";
+import { consumir, ipDe, mensagemLimite } from "@/lib/limite";
 import {
   atualizarStatus,
   cancelarNota,
@@ -22,7 +23,7 @@ export async function emitirNotaAction(empresaId: string, _: EstadoEmissao, dado
   const u = await exigirUsuario();
   const limite = await consumir("emissao", u.id);
   if (!limite.ok) return { erro: mensagemLimite(limite) };
-  const r = await emitirNota(u.id, empresaId, dados);
+  const r = await emitirNota(u.id, empresaId, dados, ipDe(await headers()));
   if (!r.ok) {
     const { ok: _ok, ...falha } = r;
     void _ok;
@@ -46,7 +47,7 @@ export async function atualizarStatusAction(empresaId: string, notaId: string): 
 
 export async function cancelarNotaAction(empresaId: string, notaId: string, justificativa: string): Promise<EstadoAcaoNota> {
   const u = await exigirUsuario();
-  const r = await cancelarNota(u.id, notaId, String(justificativa ?? ""));
+  const r = await cancelarNota(u.id, notaId, String(justificativa ?? ""), ipDe(await headers()));
   revalidatePath(caminhoNotas(empresaId), "layout");
   return estadoDe(r, "Nota cancelada.");
 }
@@ -55,7 +56,7 @@ export async function retentarNotaAction(empresaId: string, notaId: string): Pro
   const u = await exigirUsuario();
   const limite = await consumir("emissao", u.id);
   if (!limite.ok) return { erro: mensagemLimite(limite) };
-  const r = await retentarNota(u.id, notaId);
+  const r = await retentarNota(u.id, notaId, ipDe(await headers()));
   revalidatePath(caminhoNotas(empresaId), "layout");
   return estadoDe(r, "Nota enviada de novo.");
 }

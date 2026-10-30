@@ -1,0 +1,2 @@
+# Fixtures XML comparadas byte a byte nos testes: sempre LF, mesmo com core.autocrlf=true
+*.xml text eol=lf
