@@ -7,6 +7,9 @@ import { ehPlanoPago, modoDemonstracao, stripeAtivo } from "@/lib/billing";
 import { BarraUso } from "@/components/billing/BarraUso";
 import { CartoesPlanos } from "@/components/billing/CartoesPlanos";
 import { FormEscritorio } from "@/components/billing/FormEscritorio";
+import { DuasEtapas, ExcluirConta, FormTrocarSenha, SairDeTodos } from "@/components/app/Seguranca";
+import { NOMES_ACAO, eventosRecentes, type AcaoAuditoria } from "@/lib/auditoria";
+import { dataHora } from "@/components/notas/rotulos";
 
 export const metadata: Metadata = { title: "Conta e plano" };
 
@@ -24,10 +27,11 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
 
   const u = await exigirUsuario();
   const p = plano(u.plano);
-  const [empresas, classificacoes, assinatura] = await Promise.all([
+  const [empresas, classificacoes, assinatura, eventos] = await Promise.all([
     db.empresa.count({ where: { userId: u.id } }),
     classificacoesNoMes(u.id),
     db.user.findUnique({ where: { id: u.id }, select: { stripeSubscriptionId: true } }),
+    eventosRecentes(u.id, 15),
   ]);
 
   const assinar = param("assinar");
@@ -119,6 +123,58 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
 
       <section className="card max-w-2xl">
         <FormEscritorio valor={u.escritorio} editavel={p.marcaPropria} />
+      </section>
+
+      <section aria-labelledby="titulo-seguranca" className="space-y-3">
+        <h2 id="titulo-seguranca" className="text-base font-semibold text-ink">
+          Segurança
+        </h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="card">
+            <DuasEtapas ativo={u.totpAtivo} />
+          </div>
+          <div className="card">
+            <FormTrocarSenha />
+          </div>
+          <div className="card">
+            <SairDeTodos />
+          </div>
+          <div className="card space-y-3">
+            <h3 className="text-sm font-semibold text-ink">Atividade recente</h3>
+            {eventos.length === 0 ? (
+              <p className="text-sm text-muted">Nenhuma atividade registrada ainda.</p>
+            ) : (
+              <ul className="max-h-64 divide-y divide-line overflow-y-auto text-sm">
+                {eventos.map((e) => (
+                  <li key={e.id} className="flex flex-wrap justify-between gap-x-3 py-2">
+                    <span className="text-ink">{NOMES_ACAO[e.acao as AcaoAuditoria] ?? e.acao}</span>
+                    <span className="text-xs text-muted tabular-nums">
+                      {dataHora(e.createdAt)}
+                      {e.ip && e.ip !== "desconhecido" ? ` · ${e.ip}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="hint">Não reconhece algo? Troque a senha e saia de todos os aparelhos.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="titulo-dados" className="card max-w-2xl space-y-4">
+        <h2 id="titulo-dados" className="text-base font-semibold text-ink">
+          Seus dados
+        </h2>
+        <div className="space-y-2">
+          <p className="text-sm text-muted">
+            Baixe uma cópia de tudo o que guardamos sobre você: conta, empresas, notas (com os XML), conversões e
+            atividade. Senhas e tokens não entram no arquivo.
+          </p>
+          <a href="/api/conta/exportar" className="btn-ghost" download>
+            Baixar meus dados (JSON)
+          </a>
+        </div>
+        <ExcluirConta />
       </section>
     </div>
   );

@@ -46,3 +46,6 @@ next-env.d.ts
 
 # anotações locais
 /other
+
+# worktrees de agentes
+/.claude/worktrees

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consumir, mensagemLimite } from "@/lib/limite";
 import { z } from "zod";
 import { usuarioAtual } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -32,6 +33,8 @@ const Entrada = z.object({
 export async function POST(req: Request) {
   const u = await usuarioAtual();
   if (!u) return NextResponse.json({ erro: "Entre na sua conta para classificar." }, { status: 401 });
+  const limite = await consumir("ia", u.id);
+  if (!limite.ok) return NextResponse.json({ erro: mensagemLimite(limite) }, { status: 429 });
 
   let corpo: unknown;
   try {

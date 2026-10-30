@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consumir, mensagemLimite } from "@/lib/limite";
 import { db } from "@/lib/db";
 import { plano, type Plano } from "@/lib/planos";
 import { classificar, iaDisponivel } from "@/lib/classificador";
@@ -53,6 +54,8 @@ const erro = (msg: string, status: number, extra: Record<string, unknown> = {}) 
 export async function POST(req: Request) {
   const { u, erro: semSessao } = await exigirSessao();
   if (!u) return semSessao;
+  const limite = await consumir("ia", u.id);
+  if (!limite.ok) return erro(mensagemLimite(limite), 429);
 
   const tipo = req.headers.get("content-type") ?? "";
   return /application\/json/i.test(tipo) ? postManual(req, u) : postMultipart(req, u);

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirUsuario } from "@/lib/auth";
+import { consumir, mensagemLimite } from "@/lib/limite";
 import {
   atualizarStatus,
   cancelarNota,
@@ -19,6 +20,8 @@ const caminhoNotas = (empresaId: string) => `/app/empresas/${empresaId}/notas`;
 
 export async function emitirNotaAction(empresaId: string, _: EstadoEmissao, dados: unknown): Promise<EstadoEmissao> {
   const u = await exigirUsuario();
+  const limite = await consumir("emissao", u.id);
+  if (!limite.ok) return { erro: mensagemLimite(limite) };
   const r = await emitirNota(u.id, empresaId, dados);
   if (!r.ok) {
     const { ok: _ok, ...falha } = r;
@@ -50,6 +53,8 @@ export async function cancelarNotaAction(empresaId: string, notaId: string, just
 
 export async function retentarNotaAction(empresaId: string, notaId: string): Promise<EstadoAcaoNota> {
   const u = await exigirUsuario();
+  const limite = await consumir("emissao", u.id);
+  if (!limite.ok) return { erro: mensagemLimite(limite) };
   const r = await retentarNota(u.id, notaId);
   revalidatePath(caminhoNotas(empresaId), "layout");
   return estadoDe(r, "Nota enviada de novo.");
