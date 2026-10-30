@@ -103,6 +103,7 @@ export async function emitirNota(userId: string, empresaId: string, dados: unkno
     data: {
       userId,
       empresaId: empresa.id,
+      destinatario: rascunho.destinatario?.nome ?? null,
       tipo: rascunho.tipo,
       ref: gerarRef(randomUUID().replace(/-/g, "")),
       provedor: e.provedor,
