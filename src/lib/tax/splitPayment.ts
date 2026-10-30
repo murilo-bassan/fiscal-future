@@ -43,7 +43,8 @@ export function impactoSplitPayment(e: EntradaSplit): ResultadoSplit {
   // Inteligente: retém só o líquido; a empresa perde a folga sobre ele
   const giroInteligente = (Math.max(liquidoMensal, 0) * folga) / 30;
   // Simplificado: retém o débito cheio; o crédito volta com atraso
-  const giroSimplificado = giroInteligente + (creditoMensal * diasCredito) / 30;
+  const giroSimplificado =
+    giroInteligente + (creditoMensal * Math.max(folga + diasCredito, 0)) / 30;
 
   return {
     folgaAtualDias: folga,

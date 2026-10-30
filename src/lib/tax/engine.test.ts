@@ -22,8 +22,21 @@ const servicoSimples: PerfilEmpresa = {
   aliquotaSimples: 0.11,
 };
 
+const distribuidora: PerfilEmpresa = {
+  ...PERFIL_EXEMPLO,
+  nome: "Distribuidora",
+  atividade: "comercio",
+  receitaAnual: 4_800_000,
+  comprasAnuais: 2_900_000,
+  despesasCreditaveis: 380_000,
+  despesasNaoCreditaveis: 720_000,
+  aliquotaIcmsVendas: 0.18,
+  aliquotaIcmsCompras: 0.12,
+  aliquotaIss: 0,
+};
+
 describe("simular (regime regular)", () => {
-  const sim = simular(PERFIL_EXEMPLO);
+  const sim = simular(distribuidora);
 
   it("2026 reproduz a situação atual", () => {
     const a = sim.anos[0];
@@ -36,9 +49,9 @@ describe("simular (regime regular)", () => {
   it("mantém o lucro em todos os anos quando o preço é reajustado", () => {
     for (const a of sim.anos) {
       const custos =
-        PERFIL_EXEMPLO.comprasAnuais +
-        PERFIL_EXEMPLO.despesasCreditaveis +
-        PERFIL_EXEMPLO.despesasNaoCreditaveis;
+        distribuidora.comprasAnuais +
+        distribuidora.despesasCreditaveis +
+        distribuidora.despesasNaoCreditaveis;
       const lucro = a.receitaNecessaria - a.tributosAntigos + a.ibsCbsCredito - custos;
       expect(lucro).toBeCloseTo(sim.lucroAtual, 4);
     }
@@ -51,6 +64,10 @@ describe("simular (regime regular)", () => {
 
   it("lucro presumido de comércio B2B ganha crédito amplo e paga menos em 2033", () => {
     expect(sim.resumo.variacaoCarga2033).toBeLessThan(0);
+  });
+
+  it("o exemplo padrão (consultoria) perde com a reforma", () => {
+    expect(simular(PERFIL_EXEMPLO).resumo.reajusteNecessario2033).toBeGreaterThan(0.05);
   });
 
   it("serviço com pouca compra no presumido sofre aumento de carga", () => {

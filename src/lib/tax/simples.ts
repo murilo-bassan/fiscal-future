@@ -9,10 +9,16 @@
  *    IBS/CBS sai da margem da empresa.
  */
 
-import { creditosNovos, aliquotasDoAno, type PerfilEmpresa } from "./engine";
+import {
+  aliquotasDoAno,
+  creditoClienteSimplesPuro,
+  creditosNovos,
+  type PerfilEmpresa,
+} from "./engine";
 import {
   DEFAULT_CENARIO,
   PARTILHA_DAS,
+  PIS_COFINS_NAO_CUMULATIVO,
   REDUCOES,
   TRANSICAO,
   type CenarioAliquota,
@@ -58,16 +64,14 @@ function lucroHibrido(
   const R = p.receitaAnual;
 
   // Crédito que o cliente PJ teria no Simples puro neste ano
-  const creditoPuro =
-    s * (partilha.pisCofins + partilha.icmsIss * faseIbs) +
-    (p.atividade === "servicos" ? 0 : s * partilha.icmsIss * f.icmsIss);
+  const creditoPuro = creditoClienteSimplesPuro(s, p.atividade, faseIbs, f.icmsIss);
 
   const receitaB2B = R * percentualB2B * (1 - creditoPuro);
   const receitaB2C = (R * (1 - percentualB2B)) / (1 + t);
   const receitaLiquida = receitaB2B + receitaB2C;
 
   // No híbrido o DAS perde a parcela de PIS/Cofins e a parte do ICMS/ISS já substituída pelo IBS
-  const fatorDas = 1 - partilha.pisCofins - partilha.ipi - partilha.icmsIss * (1 - f.icmsIss);
+  const fatorDas = 1 - partilha.pisCofins - partilha.icmsIss * (1 - f.icmsIss);
   const das = s * receitaLiquida * fatorDas;
   const credito = creditosNovos(p, f, cenario);
   const debito = t * receitaLiquida;
@@ -90,7 +94,7 @@ export function compararSimples(
   const lucroPuro = R - dasPuro - custos;
   const partilha = PARTILHA_DAS[p.atividade];
   const creditoClienteHoje =
-    0.0925 + (p.atividade === "servicos" ? 0 : p.aliquotaSimples * partilha.icmsIss);
+    PIS_COFINS_NAO_CUMULATIVO + (p.atividade === "servicos" ? 0 : p.aliquotaSimples * partilha.icmsIss);
 
   const anos = TRANSICAO.filter((f) => f.ano >= 2027).map((f): ComparacaoSimplesAno => {
     const h = lucroHibrido(p, f.ano, cenario, p.percentualB2B);

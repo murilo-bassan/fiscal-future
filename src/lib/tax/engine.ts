@@ -144,6 +144,21 @@ function creditoClienteAntigo(p: PerfilEmpresa, f: FaseTransicao): number {
   return pisCofins + p.aliquotaIcmsVendas * f.icmsIss;
 }
 
+/**
+ * Crédito do cliente PJ ao comprar de um Simples puro, a partir de 2027: a CBS
+ * embutida no DAS, mais o IBS e, para mercadorias, o ICMS que ainda resta.
+ */
+export function creditoClienteSimplesPuro(
+  aliquotaSimples: number,
+  atividade: Atividade,
+  faseIbs: number,
+  fatorIcmsIss: number,
+): number {
+  const partilha = PARTILHA_DAS[atividade];
+  const parteIcmsIss = atividade === "servicos" ? faseIbs : Math.min(1, faseIbs + fatorIcmsIss);
+  return aliquotaSimples * (partilha.pisCofins + partilha.icmsIss * parteIcmsIss);
+}
+
 function custosTotais(p: PerfilEmpresa) {
   return p.comprasAnuais + p.despesasCreditaveis + p.despesasNaoCreditaveis;
 }
@@ -203,7 +218,6 @@ function simularSimplesPuro(p: PerfilEmpresa, cenario: CenarioAliquota): Simulac
   const R0 = p.receitaAnual;
   const das = p.aliquotaSimples * R0;
   const lucroAtual = R0 - das - custosTotais(p);
-  const partilha = PARTILHA_DAS[p.atividade];
   const custoClienteAtual = 1 - creditoClienteAntigo(p, TRANSICAO[0]);
 
   const anos = TRANSICAO.map((f): ResultadoAno => {
@@ -212,8 +226,7 @@ function simularSimplesPuro(p: PerfilEmpresa, cenario: CenarioAliquota): Simulac
     const faseIbs = f.ibsCbsCompensavel ? 0 : ibs / cenario.ibs;
     const creditoCliente = f.ibsCbsCompensavel
       ? creditoClienteAntigo(p, f)
-      : p.aliquotaSimples * (partilha.pisCofins + partilha.icmsIss * faseIbs) +
-        (p.atividade === "servicos" ? 0 : p.aliquotaSimples * partilha.icmsIss * f.icmsIss);
+      : creditoClienteSimplesPuro(p.aliquotaSimples, p.atividade, faseIbs, f.icmsIss);
     return {
       ano: f.ano,
       nota: f.nota,

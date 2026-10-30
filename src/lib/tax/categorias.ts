@@ -97,7 +97,7 @@ export const CATEGORIAS: Categoria[] = [
     id: "profissoes-regulamentadas",
     nome: "Serviços de profissões intelectuais regulamentadas",
     reducao: "reducao30",
-    exemplos: ["advogados", "contadores", "engenheiros", "arquitetos", "economistas", "médicos veterinários", "psicólogos", "administradores"],
+    exemplos: ["advogados", "advocaticios", "honorarios", "contadores", "contabilidade", "engenheiros", "arquitetos", "economistas", "médicos veterinários", "psicólogos", "administradores"],
   },
   {
     id: "padrao",
