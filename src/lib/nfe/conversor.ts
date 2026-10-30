@@ -226,7 +226,8 @@ function gerarXml(
   itens: ItemConvertido[],
   totais: NotaConvertida["totais"],
 ): string {
-  const nfe = structuredClone(nota.bruto) as Record<string, Record<string, unknown>>;
+  if (nota.modelo === "nfse") return gerarXmlServico(nota, itens, totais);
+  const nfe = structuredClone(nota.bruto ?? montarBruto(nota)) as Record<string, Record<string, unknown>>;
   const inf = nfe.infNFe as Record<string, unknown>;
   const porItem = new Map(itens.map((i) => [i.nItem, i]));
   for (const det of (inf.det as Record<string, Record<string, unknown>>[]) ?? []) {
@@ -243,9 +244,106 @@ function gerarXml(
   inf.total = total;
 
   const corpo = builder.build({ NFe: nfe }) as string;
+  return cabecalhoXml(nota) + corpo;
+}
+
+function cabecalhoXml(nota: NotaLida) {
+  const origem =
+    nota.fonte === "xml"
+      ? ""
+      : " Montada a partir de dados digitados, extraídos de documento ou de planilha: confira com a nota original.";
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    "<!-- Referência gerada pelo Fiscal Future no layout da NT 2025.002 (IBS/CBS). Sem assinatura: não é documento fiscal. -->\n" +
-    corpo
+    `<!-- Referência gerada pelo Fiscal Future no layout da NT 2025.002 (IBS/CBS). Sem assinatura: não é documento fiscal.${origem} -->\n`
   );
+}
+
+const documento = (d: string) => (d.length === 11 ? { CPF: d } : d ? { CNPJ: d } : {});
+
+/**
+ * NF-e/NFC-e sem XML original: monta a estrutura mínima (identificação,
+ * participantes, produtos e totais). Os grupos de ICMS/PIS/Cofins não são
+ * recriados, porque os CSTs da nota antiga não são conhecidos.
+ */
+function montarBruto(nota: NotaLida): Record<string, unknown> {
+  const d = nota.destinatario;
+  return {
+    "@_xmlns": "http://www.portalfiscal.inf.br/nfe",
+    infNFe: {
+      "@_versao": "4.00",
+      ...(nota.chave ? { "@_Id": `NFe${nota.chave}` } : {}),
+      ide: { natOp: nota.naturezaOperacao, mod: nota.modelo, serie: nota.serie, nNF: nota.numero, dhEmi: nota.emissao },
+      emit: {
+        ...documento(nota.emitente.documento),
+        xNome: nota.emitente.nome,
+        enderEmit: { UF: nota.emitente.uf },
+        CRT: nota.crt,
+      },
+      ...(d ? { dest: { ...documento(d.documento), xNome: d.nome, enderDest: { UF: d.uf } } } : {}),
+      det: nota.itens.map((it) => ({
+        "@_nItem": String(it.nItem),
+        prod: {
+          cProd: it.codigo,
+          xProd: it.descricao,
+          NCM: it.ncm,
+          CFOP: it.cfop,
+          uCom: it.unidade,
+          qCom: it.quantidade.toFixed(4),
+          vUnCom: it.valorUnitario.toFixed(4),
+          vProd: v2(it.valor),
+          ...(it.desconto ? { vDesc: v2(it.desconto) } : {}),
+        },
+        imposto: {},
+      })),
+      total: {
+        ICMSTot: {
+          vICMS: v2(nota.totais.icms),
+          vProd: v2(nota.totais.produtos),
+          vDesc: v2(nota.totais.desconto),
+          vIPI: v2(nota.totais.ipi),
+          vPIS: v2(nota.totais.pis),
+          vCOFINS: v2(nota.totais.cofins),
+          vNF: v2(nota.totais.nota),
+        },
+      },
+    },
+  };
+}
+
+/**
+ * NFS-e: não existe um XML antigo único (cada prefeitura tinha o seu layout).
+ * Geramos uma referência simples com os valores do serviço e o grupo IBS/CBS
+ * por item, para conferência e cadastro.
+ */
+function gerarXmlServico(nota: NotaLida, itens: ItemConvertido[], totais: NotaConvertida["totais"]): string {
+  const porItem = new Map(itens.map((i) => [i.nItem, i]));
+  const corpo = builder.build({
+    NFSeReferencia: {
+      infNFSe: {
+        nNFSe: nota.numero,
+        dhEmi: nota.emissao,
+        prest: {
+          ...documento(nota.emitente.documento),
+          xNome: nota.emitente.nome,
+          regime: nota.crt === "3" ? "normal" : "simples",
+        },
+        ...(nota.destinatario
+          ? { toma: { ...documento(nota.destinatario.documento), xNome: nota.destinatario.nome } }
+          : {}),
+        servicos: {
+          servico: nota.itens.map((it) => ({
+            "@_nItem": String(it.nItem),
+            xDescServ: it.descricao,
+            cServ: it.codigoServico ?? "",
+            vServ: v2(it.valor),
+            ...(it.desconto ? { vDesc: v2(it.desconto) } : {}),
+            vISS: v2(it.iss),
+            IBSCBS: grupoIBSCBS(porItem.get(it.nItem)!.ibsCbs),
+          })),
+        },
+        IBSCBSTot: grupoIBSCBSTot(totais),
+      },
+    },
+  }) as string;
+  return cabecalhoXml(nota) + corpo;
 }

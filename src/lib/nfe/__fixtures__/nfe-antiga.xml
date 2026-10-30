@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
   <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
-    <infNFe Id="NFe35251012345678000195550010000012341000012345" versao="4.00">
+    <infNFe Id="NFe35251012345678000195550010000012341000012340" versao="4.00">
       <ide>
         <cUF>35</cUF><cNF>00001234</cNF><natOp>Venda de mercadoria</natOp><mod>55</mod><serie>1</serie>
         <nNF>1234</nNF><dhEmi>2025-10-15T10:30:00-03:00</dhEmi><tpNF>1</tpNF><idDest>1</idDest>
-        <cMunFG>3550308</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>5</cDV><tpAmb>1</tpAmb>
+        <cMunFG>3550308</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>0</cDV><tpAmb>1</tpAmb>
         <finNFe>1</finNFe><indFinal>0</indFinal><indPres>1</indPres><procEmi>0</procEmi><verProc>ERP 1.0</verProc>
       </ide>
       <emit>
@@ -56,5 +56,5 @@
     </infNFe>
     <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo/><SignatureValue>abc</SignatureValue></Signature>
   </NFe>
-  <protNFe versao="4.00"><infProt><tpAmb>1</tpAmb><chNFe>35251012345678000195550010000012341000012345</chNFe><dhRecbto>2025-10-15T10:30:05-03:00</dhRecbto><nProt>135250000000001</nProt><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe>
+  <protNFe versao="4.00"><infProt><tpAmb>1</tpAmb><chNFe>35251012345678000195550010000012341000012340</chNFe><dhRecbto>2025-10-15T10:30:05-03:00</dhRecbto><nProt>135250000000001</nProt><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe>
 </nfeProc>

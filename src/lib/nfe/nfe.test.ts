@@ -11,7 +11,7 @@ describe("lerNota", () => {
   const n = lerNota(xml);
 
   it("lê cabeçalho, participantes e protocolo", () => {
-    expect(n.chave).toBe("35251012345678000195550010000012341000012345");
+    expect(n.chave).toBe("35251012345678000195550010000012341000012340");
     expect(n.modelo).toBe("55");
     expect(n.numero).toBe("1234");
     expect(n.autorizada).toBe(true);

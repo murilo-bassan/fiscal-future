@@ -7,12 +7,17 @@ import { XMLParser } from "fast-xml-parser";
 
 export const TAMANHO_MAXIMO_XML = 2 * 1024 * 1024;
 
+/** De onde a nota veio: XML, digitada, extraída de PDF/foto ou importada de planilha. */
+export type FonteNota = "xml" | "manual" | "documento" | "planilha";
+
 export type ItemLido = {
   nItem: number;
   codigo: string;
   descricao: string;
   ncm: string;
   cfop: string;
+  /** NFS-e: código do serviço. */
+  codigoServico?: string;
   unidade: string;
   quantidade: number;
   valorUnitario: number;
@@ -41,8 +46,9 @@ export type Participante = {
 };
 
 export type NotaLida = {
+  fonte: FonteNota;
   chave: string;
-  modelo: "55" | "65";
+  modelo: "55" | "65" | "nfse";
   serie: string;
   numero: string;
   emissao: string; // ISO
@@ -62,8 +68,11 @@ export type NotaLida = {
     ipi: number;
     nota: number; // vNF
   };
-  /** Objeto bruto da NFe (sem assinatura nem protocolo), para regerar o XML. */
-  bruto: Record<string, unknown>;
+  /**
+   * Objeto bruto da NFe (sem assinatura nem protocolo), para regerar o XML.
+   * Só existe quando a nota veio de XML; nas outras fontes o XML é montado do zero.
+   */
+  bruto?: Record<string, unknown>;
 };
 
 export class ErroLeituraNota extends Error {}
@@ -172,6 +181,7 @@ export function lerNota(xml: string): NotaLida {
   void _assinatura;
 
   return {
+    fonte: "xml",
     chave: str(prot.chNFe) || str(inf["@_Id"]).replace(/^NFe/, ""),
     modelo,
     serie: str(ide.serie),

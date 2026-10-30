@@ -95,7 +95,10 @@ model ConversaoNota {
   emitente   String
   ano        Int
   resultado  String // JSON de NotaConvertida sem o campo xml (recalculável)
-  xmlOriginal String // XML da nota antiga, para reconverter com outras escolhas
+  fonte       String   @default("xml") // xml | manual | documento | planilha (FonteNota)
+  // Conteúdo original para reconverter com outras escolhas: o XML (fonte "xml")
+  // ou o JSON de NotaManualEntrada (src/lib/nfe/entrada.ts) nas demais fontes.
+  xmlOriginal String
   createdAt  DateTime @default(now())
 
   @@index([userId, createdAt])

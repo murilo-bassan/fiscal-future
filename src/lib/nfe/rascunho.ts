@@ -11,7 +11,7 @@ export function rascunhoDeConversao(nota: NotaLida, convertida: NotaConvertida):
   const categoria = new Map(convertida.itens.map((i) => [i.nItem, i.categoria.id]));
   const d = nota.destinatario;
   return {
-    tipo: "nfe",
+    tipo: nota.modelo === "nfse" ? "nfse" : "nfe",
     naturezaOperacao: nota.naturezaOperacao || "Venda de mercadoria",
     destinatario: {
       documento: d?.documento ?? "",
@@ -26,6 +26,7 @@ export function rascunhoDeConversao(nota: NotaLida, convertida: NotaConvertida):
       descricao: it.descricao,
       ncm: it.ncm,
       cfop: it.cfop,
+      codigoServico: it.codigoServico,
       unidade: it.unidade || "UN",
       quantidade: it.quantidade,
       valorUnitario: it.valorUnitario,
