@@ -99,7 +99,11 @@ export function converterNota(nota: NotaLida, opcoes: OpcoesConversao = {}): Not
       seguro: it.seguro,
       outros: it.outros,
       desconto: it.desconto,
-      ...restantes,
+      // O IPI fica fora: não está no valor do produto nem é deduzido da base (NT 2025.002)
+      icms: restantes.icms,
+      pis: restantes.pis,
+      cofins: restantes.cofins,
+      iss: restantes.iss,
     });
     const ibsCbs = calcularIbsCbsItem(base, categoria, aliq);
     const antigosNoAno = arred(restantes.icms + restantes.pis + restantes.cofins + restantes.ipi + restantes.iss);
@@ -146,6 +150,11 @@ export function converterNota(nota: NotaLida, opcoes: OpcoesConversao = {}): Not
   }
   if (aliq.compensavel) {
     avisos.push("Em 2026 o IBS e a CBS são destacados na nota, mas compensados com PIS/Cofins: não aumentam o valor a pagar.");
+  }
+  if (aliq.ano >= 2027) {
+    avisos.push(
+      "No XML de referência, os grupos de ICMS, IPI, PIS e Cofins ficam como na nota original. PIS, Cofins e IPI deixam de ser cobrados em 2027, e o ICMS, em 2033; ajuste também esse cadastro no ERP.",
+    );
   }
   if (aliq.ano >= 2029) {
     avisos.push("A partir de 2029 a divisão do IBS entre estado e município é uma estimativa; o total do IBS não muda.");

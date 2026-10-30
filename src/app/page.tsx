@@ -13,6 +13,8 @@ import { PLANOS, brl, pct } from "@/lib/planos";
 import { Header, foco } from "@/components/marketing/Header";
 import { Footer } from "@/components/marketing/Footer";
 import { Faq } from "@/components/marketing/Faq";
+import { converterNota, lerNota } from "@/lib/nfe";
+import { XML_EXEMPLO } from "@/app/api/converter/_lib/exemplo";
 
 /* ---------- números reais do exemplo, calculados pelo motor do app ---------- */
 
@@ -58,6 +60,7 @@ export default function Home() {
         <Hero />
         <LinhaDoTempo />
         <Dores />
+        <NotasNoModeloNovo />
         <ParaQuem />
         <PrevisaoPrecos />
         <Perguntas />
@@ -303,6 +306,57 @@ function Dores() {
             documento para levar à reunião com sócios, banco ou clientes. No plano do escritório
             contábil, com a marca do escritório.
           </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NotasNoModeloNovo() {
+  // Conversão real da nota de exemplo do app, feita pelo mesmo conversor
+  const conv = converterNota(lerNota(XML_EXEMPLO), { ano: 2027 });
+  const primeiroComEmissao = Object.values(PLANOS).find((p) => p.notasMes > 0);
+  return (
+    <section className="border-b border-line">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <h2 className="display max-w-2xl text-3xl leading-tight text-ink sm:text-4xl">
+          Emita e converta notas no modelo novo
+        </h2>
+        <div className="mt-10 grid gap-12 md:grid-cols-2">
+          <article className="border-t border-ink/80 pt-6">
+            <h3 className="text-lg font-semibold text-ink">Emissão de NF-e e NFS-e já com IBS e CBS</h3>
+            <p className="mt-4 leading-relaxed text-ink/85">
+              O ZeroAbi preenche o CST, o cClassTrib e os valores de IBS e CBS de cada item a partir
+              da classificação dos seus produtos e serviços. A NFS-e nacional passa a ser obrigatória
+              para o Simples em 1º de novembro de 2026, e a partir de 1º de janeiro de 2027 o Simples
+              também precisa preencher os campos de IBS e CBS na NF-e.
+            </p>
+            {primeiroComEmissao && (
+              <p className="mt-4 text-sm text-muted">
+                Incluída a partir do plano {primeiroComEmissao.nome}, com limite mensal de notas.
+              </p>
+            )}
+          </article>
+          <article className="border-t border-ink/80 pt-6">
+            <h3 className="text-lg font-semibold text-ink">Conversão das notas que você já emitiu</h3>
+            <p className="mt-4 leading-relaxed text-ink/85">
+              Envie o XML de uma nota antiga e veja como ela fica no modelo novo: a classificação de
+              cada item, o imposto da mesma venda no ano que você escolher e o XML no layout novo,
+              para ajustar o cadastro do ERP antes da virada.
+            </p>
+            <div className="mt-5 border-y border-line py-4">
+              <p className="text-sm text-muted">
+                Nota de exemplo com {conv.itens.length} itens, tributos sobre a venda
+              </p>
+              <p className="mt-1 flex flex-wrap items-baseline gap-x-3 text-ink">
+                <span className="display text-2xl text-muted">{brl(conv.totais.tributosOriginais, 2)}</span>
+                <span aria-hidden className="text-muted">→</span>
+                <span className="sr-only">passam a</span>
+                <span className="display text-2xl">{brl(conv.totais.totalNoAno, 2)}</span>
+                <span className="text-sm text-muted">em {conv.ano}</span>
+              </p>
+            </div>
+          </article>
         </div>
       </div>
     </section>

@@ -58,15 +58,21 @@ export function calcularRascunho(
   opcoes: { ano?: number; cenario?: CenarioAliquota } = {},
 ): CalculoRascunho {
   const aliq = aliquotasNota(opcoes.ano ?? new Date().getFullYear(), opcoes.cenario ?? DEFAULT_CENARIO);
+  // Todo optante do Simples (CRT 1, 2 e 4) recolhe IBS/CBS no DAS, salvo opção pelo regime regular
   const simples = emitente.crt !== "3";
+  // Acima do sublimite (CRT 2), ICMS e ISS saem do DAS e são destacados como no regime normal
+  const icmsIssForaDoDas = emitente.crt === "3" || emitente.crt === "2";
   const temPisCofins = aliq.ano <= 2026 && !simples && emitente.regime !== "simples";
   const pc = temPisCofins ? PIS_COFINS[emitente.regime as "presumido" | "real"] : { pis: 0, cofins: 0 };
 
   const itens = r.itens.map((it): CalculoItem => {
     const bruto = arred(it.quantidade * it.valorUnitario);
     const valor = arred(bruto - it.desconto);
-    const icms = r.tipo === "nfe" && !simples ? arred(valor * (it.aliquotaIcms ?? 0)) : 0;
-    const iss = r.tipo === "nfse" && aliq.ano < 2033 ? arred(valor * (emitente.aliquotaIssPadrao ?? 0)) : 0;
+    const icms = r.tipo === "nfe" && icmsIssForaDoDas ? arred(valor * (it.aliquotaIcms ?? 0)) : 0;
+    const iss =
+      r.tipo === "nfse" && icmsIssForaDoDas && aliq.ano < 2033
+        ? arred(valor * (emitente.aliquotaIssPadrao ?? 0))
+        : 0;
     const pis = arred(valor * pc.pis);
     const cofins = arred(valor * pc.cofins);
     const base = baseIbsCbs({ valor: bruto, desconto: it.desconto, icms, pis, cofins, iss });

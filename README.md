@@ -3,7 +3,8 @@
 A Reforma Tributária sem susto. O ZeroAbi mostra para PMEs e escritórios contábeis
 quanto a empresa vai pagar com IBS e CBS de 2026 a 2033, que preço cobrar para manter
 a margem, se vale sair do Simples puro para o regime regular de IBS/CBS e quanto caixa
-o split payment vai prender.
+o split payment vai prender. Também emite NF-e e NFS-e já com IBS/CBS (via emissor homologado)
+e converte XMLs de notas antigas para o layout novo (NT 2025.002).
 
 ## Rodando
 
@@ -27,6 +28,8 @@ Sem `STRIPE_SECRET_KEY`, o checkout fica em modo demonstração (só fora de pro
 | `src/app/(auth)`, `src/app/app` | Cadastro, login e área logada |
 | `src/app/api/classificar` | Classificação de produtos com Claude |
 | `src/app/api/checkout`, `api/stripe/webhook` | Assinaturas |
+| `src/lib/nfe/` | Leitura de NF-e, cálculo de IBS/CBS por item, conversão e XML no layout novo |
+| `src/lib/emissao/` | Contrato de emissão, cálculo do rascunho e provedores (simulado, Focus NFe) |
 
 **Atualize `src/lib/tax/params.ts` quando o Senado publicar a alíquota de referência da CBS
 (prazo: 15/12/2026).** O produto inteiro depende desse número.
@@ -59,19 +62,21 @@ São estimativas para planejamento, não apuração.
 | Plano | R$/mês | Para quem | Âncora |
 |---|---|---|---|
 | Grátis | 0 | Isca: vê o tamanho do problema | — |
-| Essencial | 97 | Dono de PME, 1 CNPJ | Uma hora de consultoria tributária |
-| Profissional | 297 | Grupos, empresas com catálogo grande | Um estudo de impacto custa R$ 5–30 mil |
-| Escritório | 797 | Contadores, até 60 clientes (R$ 13/cliente) | O contador revende como serviço de R$ 200–500/cliente |
+| Essencial | 127 | Dono de PME, 1 CNPJ, 50 notas/mês | Emissor e estudo de impacto num lugar só |
+| Profissional | 347 | Grupos, empresas com catálogo grande | Um estudo de impacto custa R$ 5–30 mil |
+| Escritório | 897 | Contadores, até 60 clientes (R$ 15/cliente) | O contador revende como serviço de R$ 200–500/cliente |
+
+Cada nota emitida tem custo no emissor homologado: revise a margem quando fechar o contrato.
 
 O plano Escritório é o motor de crescimento. O Brasil tem cerca de 70 mil escritórios
 contábeis, e cada um que assina leva dezenas de empresas e cobra delas pelo relatório
 com a própria marca.
 
 ### Conta para ficar rico (cenário de 24 meses)
-- 300 escritórios × R$ 797 = R$ 239 mil/mês
-- 1.500 PMEs × R$ 120 (mix) = R$ 180 mil/mês
-- **≈ R$ 420 mil de receita recorrente mensal, ≈ R$ 5 milhões por ano.** Margem bruta acima de 90%
-  (o maior custo variável é IA, centavos por classificação).
+- 300 escritórios × R$ 897 = R$ 269 mil/mês
+- 1.500 PMEs × R$ 160 (mix) = R$ 240 mil/mês
+- **≈ R$ 510 mil de receita recorrente mensal, ≈ R$ 6 milhões por ano.** Os custos variáveis são o
+  emissor (por nota ou por CNPJ) e a IA (centavos por classificação).
 
 ### Aquisição
 1. **Conteúdo com calculadora grátis**: "Quanto sua empresa vai pagar em 2027?" ranqueia
@@ -84,10 +89,8 @@ com a própria marca.
    do Simples. Uma campanha em cada data.
 
 ### Próximas features (ordem de receita)
-1. Importação do SPED/XML de NF-e para preencher o perfil e classificar o catálogo inteiro
-   automaticamente (corta o atrito do formulário).
-2. Validação das notas de 2026 com os campos de IBS/CBS (cClassTrib, CST), alertando erros
-   antes da rejeição.
+1. Importação do SPED para preencher o perfil e classificar o catálogo inteiro automaticamente.
+2. Validação em lote das notas emitidas pelo ERP (CST/cClassTrib errados), antes da rejeição.
 3. Tabela de preços em lote: preço novo por SKU para importar no ERP.
 4. Integrações com ERPs (Omie, Bling, Conta Azul, Tiny) e uma API para softwares contábeis.
 5. Alertas quando mudam alíquotas e regulamentos (retenção).

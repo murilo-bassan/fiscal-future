@@ -5,7 +5,7 @@ import type { RascunhoNota } from "./tipos";
 const servico: RascunhoNota = {
   tipo: "nfse",
   naturezaOperacao: "Prestação de serviço",
-  destinatario: { documento: "98765432000110", nome: "Cliente", consumidorFinal: false },
+  destinatario: { documento: "98765432000198", nome: "Cliente", consumidorFinal: false },
   itens: [{ codigo: "1", descricao: "Consultoria", unidade: "UN", quantidade: 1, valorUnitario: 1000, desconto: 0, categoriaId: "padrao" }],
 };
 
@@ -32,5 +32,20 @@ describe("calcularRascunho", () => {
     const c = calcularRascunho({ crt: "3", regime: "presumido", aliquotaIssPadrao: 0.05 }, r, { ano: 2027 });
     expect(c.itens[0].ibsCbs.cClassTrib).toBe("200052");
     expect(c.itens[0].ibsCbs.cbs.aliquotaEfetiva).toBeCloseTo(0.087 * 0.7, 6);
+  });
+});
+
+describe("calcularRascunho no Simples", () => {
+  it("CRT 1: ISS dentro do DAS, fora da base", () => {
+    const c = calcularRascunho({ crt: "1", regime: "simples", aliquotaIssPadrao: 0.05 }, servico, { ano: 2027 });
+    expect(c.totais.iss).toBe(0);
+    expect(c.totais.base).toBe(1000);
+    expect(c.simples).toBe(true);
+  });
+
+  it("CRT 2 (acima do sublimite): ISS destacado fora do DAS", () => {
+    const c = calcularRascunho({ crt: "2", regime: "simples", aliquotaIssPadrao: 0.05 }, servico, { ano: 2027 });
+    expect(c.totais.iss).toBe(50);
+    expect(c.totais.pis).toBe(0);
   });
 });

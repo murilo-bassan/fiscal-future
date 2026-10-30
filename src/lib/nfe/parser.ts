@@ -107,7 +107,7 @@ function participante(p: No, endereco: string): Participante {
 }
 
 export function lerNota(xml: string): NotaLida {
-  if (xml.length > TAMANHO_MAXIMO_XML) throw new ErroLeituraNota("Arquivo grande demais (máx. 2 MB).");
+  if (new TextEncoder().encode(xml).length > TAMANHO_MAXIMO_XML) throw new ErroLeituraNota("Arquivo grande demais (máx. 2 MB).");
   if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new ErroLeituraNota("XML com DOCTYPE não é aceito.");
 
   let doc: No;

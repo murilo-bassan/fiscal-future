@@ -18,6 +18,8 @@ const ordem = planos.map((p) => p.id);
 const desde = (id: PlanoId) => (p: Plano) => ordem.indexOf(p.id) >= ordem.indexOf(id);
 const numero = (v: number) => v.toLocaleString("pt-BR");
 
+const comEmissao = planos.filter((p) => p.notasMes > 0);
+
 const linhas: { recurso: string; valor: (p: Plano) => boolean | string }[] = [
   { recurso: "Empresas (CNPJs)", valor: (p) => numero(p.empresas) },
   { recurso: "Simulação de impacto 2026–2033", valor: () => true },
@@ -26,6 +28,8 @@ const linhas: { recurso: string; valor: (p: Plano) => boolean | string }[] = [
   { recurso: "Impacto do split payment no caixa", valor: desde("essencial") },
   { recurso: "Classificações de produtos por mês", valor: (p) => numero(p.classificacoesMes) },
   { recurso: "Classificação em lote (planilha CSV)", valor: (p) => p.classificacaoLote },
+  { recurso: "Notas emitidas por mês (NF-e e NFS-e)", valor: (p) => (p.notasMes > 0 ? numero(p.notasMes) : false) },
+  { recurso: "Notas antigas convertidas por mês", valor: (p) => numero(p.conversoesMes) },
   { recurso: "Cenários de alíquota lado a lado", valor: desde("profissional") },
   { recurso: "Relatório em PDF", valor: (p) => p.relatorioPdf },
   { recurso: "Relatório com a marca do escritório", valor: (p) => p.marcaPropria },
@@ -117,6 +121,10 @@ export default function PrecosPage() {
                 {
                   p: "Posso cancelar quando quiser?",
                   r: "Sim, sem multa. O acesso continua até o fim do período que você já pagou.",
+                },
+                {
+                  p: "A emissão de notas está incluída?",
+                  r: `Sim, nos planos ${comEmissao.map((p) => p.nome).join(", ").replace(/, ([^,]*)$/, " e $1")}, com um limite mensal de notas por plano (veja a tabela acima). As notas já saem com IBS e CBS e são transmitidas por um emissor homologado.`,
                 },
                 {
                   p: "O que acontece quando a alíquota oficial sair?",

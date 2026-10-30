@@ -14,7 +14,7 @@
         <IE>123456789110</IE><CRT>3</CRT>
       </emit>
       <dest>
-        <CNPJ>98765432000110</CNPJ><xNome>Mercado Cliente Ltda &amp; Cia</xNome>
+        <CNPJ>98765432000198</CNPJ><xNome>Mercado Cliente Ltda &amp; Cia</xNome>
         <enderDest><xLgr>Rua B</xLgr><nro>200</nro><xBairro>Centro</xBairro><cMun>3509502</cMun><xMun>Campinas</xMun><UF>SP</UF><CEP>13010000</CEP></enderDest>
         <indIEDest>1</indIEDest><IE>987654321110</IE>
       </dest>

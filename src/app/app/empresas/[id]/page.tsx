@@ -66,6 +66,9 @@ export default async function EmpresaPage({
             <Link href={`${base}/editar`} className="btn-ghost">
               Editar dados
             </Link>
+            <Link href={`${base}/notas`} className="btn-ghost">
+              Notas fiscais
+            </Link>
             {pdf ? (
               <Link href={`${base}/relatorio${qsCenario}`} className="btn-primary">
                 Relatório PDF
