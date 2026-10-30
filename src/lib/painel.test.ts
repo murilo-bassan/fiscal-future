@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { agruparPorMes, rankingDestinatarios, variacao } from "./painel";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+vi.mock("./db", () => ({ db: {} }));
+
+const { agruparPorMes, rankingDestinatarios, variacao } = await import("./painel");
 
 describe("painel mensal", () => {
   it("agrupa meses em JavaScript e soma somente notas autorizadas", () => {
