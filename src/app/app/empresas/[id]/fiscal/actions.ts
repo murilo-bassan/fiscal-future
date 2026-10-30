@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { registrar } from "@/lib/auditoria";
 import { exigirUsuario } from "@/lib/auth";
 import { criptografar } from "@/lib/cripto";
 import { db } from "@/lib/db";
+import { ipDe } from "@/lib/limite";
 import { lerPercentual } from "@/components/app/formato";
 
 export type EstadoFiscal = {
@@ -103,6 +106,14 @@ export async function salvarDadosFiscais(empresaId: string, _: EstadoFiscal, for
       provedor,
       provedorToken,
     },
+  });
+
+  // Nunca o token: só se ele foi trocado ou removido
+  const token = removerToken ? "token removido" : tokenNovo ? "token trocado" : null;
+  await registrar(u.id, "dados_fiscais_alterados", {
+    empresaId: atual.id,
+    detalhe: [`${provedor} · ${ambiente}`, token].filter(Boolean).join(" · "),
+    ip: ipDe(await headers()),
   });
 
   revalidatePath(`/app/empresas/${atual.id}`, "layout");
