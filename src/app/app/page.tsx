@@ -7,6 +7,7 @@ import { analisar } from "@/components/app/analise";
 import { NOMES_ATIVIDADE, NOMES_REGIME } from "@/components/app/camposPerfil";
 import { brl, pctSinal } from "@/components/app/formato";
 import { cenarioPorId, lerPerfil } from "./empresas/dados";
+import { agruparPorMes, conversoesDoMes, notasDoMes } from "@/lib/painel";
 
 export const metadata: Metadata = { title: "Empresas" };
 
@@ -19,6 +20,16 @@ export default async function EmpresasPage() {
   });
   const noLimite = empresas.length >= p.empresas;
   const primeiroNome = u.nome.split(" ")[0];
+  const [notasMes, conversoes] = await Promise.all([notasDoMes(u.id), conversoesDoMes(u.id)]);
+  const resumoMes = agruparPorMes(notasMes, 1)[0];
+  const porEmpresa = new Map<string, { notas: number; faturamento: number }>();
+  for (const n of notasMes) {
+    if (n.status !== "autorizada") continue;
+    const atual = porEmpresa.get(n.empresaId ?? "") ?? { notas: 0, faturamento: 0 };
+    atual.notas += 1;
+    atual.faturamento += n.valorTotal;
+    porEmpresa.set(n.empresaId ?? "", atual);
+  }
 
   return (
     <div className="space-y-8">
@@ -37,6 +48,20 @@ export default async function EmpresasPage() {
           </Link>
         )}
       </div>
+
+      <section aria-labelledby="resumo-escritorio" className="space-y-4">
+        <div><h2 id="resumo-escritorio" className="text-lg font-semibold text-ink">Escritório · resumo do mês</h2><p className="text-sm text-muted">Notas de produção autorizadas e conversões em todas as empresas.</p></div>
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <ResumoMes rotulo="Notas autorizadas" valor={String(resumoMes.notas)} />
+          <ResumoMes rotulo="Faturamento autorizado" valor={brl(resumoMes.faturamento)} />
+          <ResumoMes rotulo="IBS/CBS destacado" valor={brl(resumoMes.ibsCbs)} />
+          <ResumoMes rotulo="Conversões no mês" valor={String(conversoes)} />
+        </div>
+        {empresas.length > 0 && <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{empresas.map((e) => {
+          const resumo = porEmpresa.get(e.id) ?? { notas: 0, faturamento: 0 };
+          return <li key={e.id} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm"><Link href={`/app/empresas/${e.id}/notas`} className="min-w-0 truncate font-medium text-ink hover:text-brand">{e.nome}</Link><span className="shrink-0 text-right text-xs tabular-nums text-muted">{resumo.notas} notas · {brl(resumo.faturamento)}</span></li>;
+        })}</ul>}
+      </section>
 
       {empresas.length === 0 ? (
         <div className="card max-w-2xl">
@@ -90,6 +115,10 @@ export default async function EmpresasPage() {
       )}
     </div>
   );
+}
+
+function ResumoMes({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return <div className="card min-w-0 p-4"><p className="text-xs font-medium text-muted">{rotulo}</p><p className="mt-2 break-words text-xl font-semibold text-ink tabular-nums">{valor}</p></div>;
 }
 
 function Resumo({ a }: { a: ReturnType<typeof analisar> }) {
