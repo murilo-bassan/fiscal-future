@@ -21,7 +21,7 @@ const nota = lerNota(fixture);
 
 describe("nota de exemplo", () => {
   it("é igual à fixture e tem a chave usada para não contar no limite", () => {
-    expect(XML_EXEMPLO).toBe(fixture);
+    expect(XML_EXEMPLO.replace(/\r\n/g, "\n")).toBe(fixture.replace(/\r\n/g, "\n"));
     expect(lerNota(XML_EXEMPLO).chave).toBe(CHAVE_EXEMPLO);
   });
 });
