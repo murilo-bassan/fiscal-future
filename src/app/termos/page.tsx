@@ -5,26 +5,26 @@ import { foco } from "@/components/marketing/Header";
 
 export const metadata: Metadata = {
   title: "Termos de uso",
-  description: "Condições de uso do ZeroAbi, ferramenta de estimativa do impacto da Reforma Tributária.",
+  description: "Condições de uso do Fiscal Future, ferramenta de estimativa do impacto da Reforma Tributária.",
 };
 
 export default function TermosPage() {
   return (
     <Documento titulo="Termos de uso" atualizado="30 de outubro de 2026">
       <p>
-        Estes termos valem para quem usa o ZeroAbi. Ao criar uma conta, você concorda com eles.
+        Estes termos valem para quem usa o Fiscal Future. Ao criar uma conta, você concorda com eles.
         Escrevemos em linguagem direta para que fique claro o que o serviço faz e o que não faz.
       </p>
 
-      <h2>O que o ZeroAbi é</h2>
+      <h2>O que o Fiscal Future é</h2>
       <p>
-        O ZeroAbi é uma ferramenta de estimativa. A partir dos dados que você informa, ele calcula
+        O Fiscal Future é uma ferramenta de estimativa. A partir dos dados que você informa, ele calcula
         o impacto provável da Reforma Tributária (EC 132/2023 e LC 214/2025) sobre a sua empresa:
         carga de tributos de 2026 a 2033, preço para manter a margem, comparação entre Simples puro
         e híbrido, efeito do split payment no caixa e classificação de produtos e serviços.
       </p>
 
-      <h2>O que o ZeroAbi não é</h2>
+      <h2>O que o Fiscal Future não é</h2>
       <ul>
         <li>
           Não é consultoria tributária, contábil ou jurídica, e os resultados não substituem a

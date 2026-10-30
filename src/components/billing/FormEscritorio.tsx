@@ -24,7 +24,7 @@ export function FormEscritorio({ valor, editavel }: { valor: string | null; edit
         />
         <p className="hint">
           {editavel ? (
-            "Aparece no topo dos relatórios em PDF que você entrega aos clientes. Deixe em branco para usar ZeroAbi."
+            "Aparece no topo dos relatórios em PDF que você entrega aos clientes. Deixe em branco para usar Fiscal Future."
           ) : (
             <>
               Disponível no plano Escritório Contábil.{" "}

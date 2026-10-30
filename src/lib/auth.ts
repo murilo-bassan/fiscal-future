@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { db } from "./db";
 
-const COOKIE = "zeroabi_session";
+const COOKIE = "fiscalfuture_session";
 const DURACAO_DIAS = 30;
 
 function chave() {

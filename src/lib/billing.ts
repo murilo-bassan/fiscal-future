@@ -19,7 +19,7 @@ export function stripe(): Stripe {
   const chave = process.env.STRIPE_SECRET_KEY;
   if (!chave) throw new Error("STRIPE_SECRET_KEY não definida");
   // Sem apiVersion: usa a versão fixada pela biblioteca stripe instalada.
-  cliente ??= new Stripe(chave, { appInfo: { name: "ZeroAbi" } });
+  cliente ??= new Stripe(chave, { appInfo: { name: "Fiscal Future" } });
   return cliente;
 }
 

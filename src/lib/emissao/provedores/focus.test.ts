@@ -20,13 +20,13 @@ const agora = () => new Date("2026-10-30T13:00:00Z");
 describe("provedor Focus NFe", () => {
   it("monta o payload da NF-e com os valores do cálculo, sem recalcular", async () => {
     const c = calcularRascunho(E, NFE, { ano: 2027 });
-    const { f, chamadas } = fetchFalso([{ status: 202, body: { status: "processando_autorizacao", ref: "za-1" } }]);
-    const r = await criarProvedorFocus({ fetch: f, agora }).emitir(E, NFE, c, "za-1");
+    const { f, chamadas } = fetchFalso([{ status: 202, body: { status: "processando_autorizacao", ref: "ff-1" } }]);
+    const r = await criarProvedorFocus({ fetch: f, agora }).emitir(E, NFE, c, "ff-1");
 
     expect(r.status).toBe("processando");
     expect(chamadas).toHaveLength(1);
     const { url, init } = chamadas[0];
-    expect(url).toBe("https://homologacao.focusnfe.com.br/v2/nfe?ref=za-1");
+    expect(url).toBe("https://homologacao.focusnfe.com.br/v2/nfe?ref=ff-1");
     expect(init.method).toBe("POST");
     const auth = (init.headers as Record<string, string>).Authorization;
     expect(auth).toBe(`Basic ${Buffer.from("TOKEN-SECRETO-123:").toString("base64")}`);
@@ -86,9 +86,9 @@ describe("provedor Focus NFe", () => {
   it("NFS-e nacional: rota /nfsen e campos da DPS", async () => {
     const c = calcularRascunho(E, NFSE, { ano: 2026 });
     const { f, chamadas } = fetchFalso([{ status: 202, body: { status: "processando_autorizacao", protocolo: "abc" } }]);
-    const r = await criarProvedorFocus({ fetch: f, agora }).emitir({ ...E, ambiente: "producao" }, NFSE, c, "za-2");
+    const r = await criarProvedorFocus({ fetch: f, agora }).emitir({ ...E, ambiente: "producao" }, NFSE, c, "ff-2");
     expect(r.status).toBe("processando");
-    expect(chamadas[0].url).toBe("https://api.focusnfe.com.br/v2/nfsen?ref=za-2");
+    expect(chamadas[0].url).toBe("https://api.focusnfe.com.br/v2/nfsen?ref=ff-2");
     const p = JSON.parse(String(chamadas[0].init.body));
     expect(p).toMatchObject({
       cnpj_prestador: E.cnpj,
@@ -122,8 +122,8 @@ describe("provedor Focus NFe", () => {
         },
       },
     ]);
-    const r = await criarProvedorFocus({ fetch: f }).consultar(E, "nfe", "za-1");
-    expect(chamadas[0].url).toBe("https://homologacao.focusnfe.com.br/v2/nfe/za-1?completa=1");
+    const r = await criarProvedorFocus({ fetch: f }).consultar(E, "nfe", "ff-1");
+    expect(chamadas[0].url).toBe("https://homologacao.focusnfe.com.br/v2/nfe/ff-1?completa=1");
     expect(chamadas[0].init.method).toBe("GET");
     expect(r).toMatchObject({
       status: "autorizada",
@@ -140,10 +140,10 @@ describe("provedor Focus NFe", () => {
       { status: 200, body: { status: "erro_cancelamento", mensagem_sefaz: "Prazo excedido" } },
     ]);
     const p = criarProvedorFocus({ fetch: f });
-    expect((await p.cancelar(E, "nfe", "za-1", "Cliente desistiu da compra")).status).toBe("cancelada");
+    expect((await p.cancelar(E, "nfe", "ff-1", "Cliente desistiu da compra")).status).toBe("cancelada");
     expect(chamadas[0].init.method).toBe("DELETE");
     expect(JSON.parse(String(chamadas[0].init.body))).toEqual({ justificativa: "Cliente desistiu da compra" });
-    const r = await p.cancelar(E, "nfe", "za-1", "Cliente desistiu da compra");
+    const r = await p.cancelar(E, "nfe", "ff-1", "Cliente desistiu da compra");
     expect(r.status).toBe("autorizada");
     expect(r.mensagem).toContain("Prazo excedido");
   });
@@ -156,10 +156,10 @@ describe("provedor Focus NFe", () => {
     ]);
     const p = criarProvedorFocus({ fetch: f });
     const c = calcularRascunho(E, NFE, { ano: 2026 });
-    const r1 = await p.emitir(E, NFE, c, "za-9");
+    const r1 = await p.emitir(E, NFE, c, "ff-9");
     expect(r1.status).toBe("erro");
     expect(r1.mensagem).toContain("cfop: inválido");
-    const r2 = await p.emitir(E, NFE, c, "za-9");
+    const r2 = await p.emitir(E, NFE, c, "ff-9");
     expect(r2.status).toBe("autorizada");
   });
 
@@ -169,7 +169,7 @@ describe("provedor Focus NFe", () => {
         init?.signal?.addEventListener("abort", () => rej(Object.assign(new Error("aborted"), { name: "AbortError" })));
       });
     }) as unknown as typeof fetch;
-    const r = await criarProvedorFocus({ fetch: f, timeoutMs: 10 }).emitir(E, NFE, calcularRascunho(E, NFE), "za-t");
+    const r = await criarProvedorFocus({ fetch: f, timeoutMs: 10 }).emitir(E, NFE, calcularRascunho(E, NFE), "ff-t");
     expect(r.status).toBe("processando");
     expect(r.mensagem).not.toContain("TOKEN");
   });

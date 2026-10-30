@@ -1,6 +1,6 @@
 /**
  * Contrato da emissão de notas. A emissão é feita por um provedor homologado
- * (API de emissão). O ZeroAbi monta a nota com IBS/CBS calculados e guarda o
+ * (API de emissão). O Fiscal Future monta a nota com IBS/CBS calculados e guarda o
  * resultado. Escopo da v1:
  *  - NFS-e no padrão nacional (serviços): ISS + IBS/CBS;
  *  - NF-e de venda de mercadoria sem substituição tributária: ICMS próprio,

@@ -169,7 +169,7 @@ export function validarJustificativa(texto: string): { ok: true; justificativa: 
 
 /** Referência única e estável da nota no provedor (idempotência). */
 export function gerarRef(id: string): string {
-  return `za-${id}`;
+  return `ff-${id}`;
 }
 
 export function inicioDoMes(agora = new Date()) {

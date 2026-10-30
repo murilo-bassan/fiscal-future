@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex items-center justify-between gap-3 pt-4">
             <Link href="/app" className="display text-xl font-semibold text-ink">
-              ZeroAbi
+              Fiscal Future
             </Link>
             <div className="flex min-w-0 items-center gap-3 text-sm">
               <Link

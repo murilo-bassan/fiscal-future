@@ -149,7 +149,7 @@ export default async function RelatorioPage({
         </div>
 
         <footer className="mt-10 border-t border-line pt-3 text-xs text-muted">
-          {escritorio ? `Preparado por ${escritorio} com ZeroAbi` : "Gerado com ZeroAbi"} em {hoje}.
+          {escritorio ? `Preparado por ${escritorio} com Fiscal Future` : "Gerado com Fiscal Future"} em {hoje}.
         </footer>
       </article>
     </>

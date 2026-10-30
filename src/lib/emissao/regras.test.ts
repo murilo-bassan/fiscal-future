@@ -73,7 +73,7 @@ describe("outras regras", () => {
   });
 
   it("ref começa com za-", () => {
-    expect(gerarRef("abc")).toBe("za-abc");
+    expect(gerarRef("abc")).toBe("ff-abc");
   });
 });
 

@@ -22,7 +22,7 @@ describe("provedor simulado", () => {
   it("autoriza NF-e na hora, com número sequencial e chave válida", async () => {
     const p = criarProvedorSimulado(deps(agora, {}, 41));
     const c = calcularRascunho(E, NFE, { ano: 2026 });
-    const r = await p.emitir(E, NFE, c, "za-1");
+    const r = await p.emitir(E, NFE, c, "ff-1");
     expect(r.status).toBe("autorizada");
     expect(r.numero).toBe("42");
     expect(r.chave).toHaveLength(44);
@@ -35,7 +35,7 @@ describe("provedor simulado", () => {
   it("XML de NF-e: tpAmb=2, aviso SEM VALOR FISCAL e grupos IBSCBS do cálculo", async () => {
     const p = criarProvedorSimulado(deps(agora));
     const c = calcularRascunho(E, NFE, { ano: 2026 });
-    const r = await p.emitir(E, NFE, c, "za-2");
+    const r = await p.emitir(E, NFE, c, "ff-2");
     expect(r.xml).toContain("SEM VALOR FISCAL");
     const x = new XMLParser({ parseTagValue: false, ignoreAttributes: false }).parse(r.xml!);
     const inf = x.nfeProc.NFe.infNFe;
@@ -54,7 +54,7 @@ describe("provedor simulado", () => {
   it("NFS-e: chave nacional de 50 dígitos e XML com ISS e IBS/CBS", async () => {
     const p = criarProvedorSimulado(deps(agora));
     const c = calcularRascunho(E, NFSE, { ano: 2026 });
-    const r = await p.emitir(E, NFSE, c, "za-3");
+    const r = await p.emitir(E, NFSE, c, "ff-3");
     expect(r.status).toBe("autorizada");
     expect(r.chave).toHaveLength(50);
     expect(chaveValida(r.chave!)).toBe(true);
@@ -67,24 +67,24 @@ describe("provedor simulado", () => {
   it("recusa produção", async () => {
     const p = criarProvedorSimulado(deps(agora));
     const prod = { ...E, ambiente: "producao" as const };
-    const r = await p.emitir(prod, NFE, calcularRascunho(prod, NFE, { ano: 2026 }), "za-4");
+    const r = await p.emitir(prod, NFE, calcularRascunho(prod, NFE, { ano: 2026 }), "ff-4");
     expect(r.status).toBe("erro");
   });
 
   it("mesma ref devolve a mesma nota (idempotente)", async () => {
     const guardada: NotaGuardada = { status: "autorizada", numero: "7", serie: "1", chave: "1".repeat(44), emitidaEm: agora };
-    const p = criarProvedorSimulado(deps(agora, { "za-5": guardada }, 99));
-    const r = await p.emitir(E, NFE, calcularRascunho(E, NFE, { ano: 2026 }), "za-5");
+    const p = criarProvedorSimulado(deps(agora, { "ff-5": guardada }, 99));
+    const r = await p.emitir(E, NFE, calcularRascunho(E, NFE, { ano: 2026 }), "ff-5");
     expect(r.numero).toBe("7");
   });
 
   it("cancela só dentro de 24 h", async () => {
     const emitida = new Date(agora.getTime() - PRAZO_CANCELAMENTO_MS + 60_000);
-    const g = { "za-6": { status: "autorizada" as const, emitidaEm: emitida } };
-    expect((await criarProvedorSimulado(deps(agora, g)).cancelar(E, "nfe", "za-6", "x")).status).toBe("cancelada");
+    const g = { "ff-6": { status: "autorizada" as const, emitidaEm: emitida } };
+    expect((await criarProvedorSimulado(deps(agora, g)).cancelar(E, "nfe", "ff-6", "x")).status).toBe("cancelada");
 
     const depois = new Date(emitida.getTime() + PRAZO_CANCELAMENTO_MS + 1);
-    const r = await criarProvedorSimulado(deps(depois, g)).cancelar(E, "nfe", "za-6", "x");
+    const r = await criarProvedorSimulado(deps(depois, g)).cancelar(E, "nfe", "ff-6", "x");
     expect(r.status).toBe("autorizada");
     expect(r.mensagem).toMatch(/24 horas/);
   });

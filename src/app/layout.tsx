@@ -6,7 +6,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "ZeroAbi: a Reforma Tributária sem susto", template: "%s · ZeroAbi" },
+  title: { default: "Fiscal Future: a Reforma Tributária sem susto", template: "%s · Fiscal Future" },
   description:
     "Descubra quanto a sua empresa vai pagar com IBS e CBS de 2026 a 2033, qual preço cobrar para manter a margem e se vale sair do Simples para o regime regular.",
 };

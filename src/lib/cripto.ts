@@ -17,6 +17,7 @@ const VERSAO = "v1";
 const ALGORITMO = "aes-256-gcm";
 const TAMANHO_IV = 12;
 const TAMANHO_TAG = 16;
+// "zeroabi" é o nome antigo do produto: mudar estes identificadores invalidaria os tokens já salvos.
 /** Dados adicionais autenticados: amarram o texto cifrado ao formato v1. */
 const AAD = Buffer.from("zeroabi:cripto:v1");
 

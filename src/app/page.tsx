@@ -82,7 +82,7 @@ function Hero() {
             janeiro.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            Em 1º de janeiro de 2027 o PIS e a Cofins acabam e a CBS entra inteira. O ZeroAbi
+            Em 1º de janeiro de 2027 o PIS e a Cofins acabam e a CBS entra inteira. O Fiscal Future
             calcula, com os números da sua empresa, o imposto de cada ano até 2033, o preço que
             mantém a sua margem e o efeito no caixa.
           </p>
@@ -247,13 +247,13 @@ function Dores() {
       pergunta: "Quanto vou pagar de imposto em cada ano?",
       numero: `${mil(sim.cargaAtual)} → ${mil(a2027.cargaTotal)}`,
       legenda: "tributos sobre vendas da distribuidora, de hoje para 2027",
-      texto: `${favoravel ? "Com crédito sobre quase tudo que compra, a carga da distribuidora cai" : "A carga da distribuidora sobe"} ${pct(Math.abs(sim.resumo.variacaoCarga2027))} em 2027 e ${pct(Math.abs(sim.resumo.variacaoCarga2033))} em 2033. Em outra empresa a conta pode ir para o outro lado. O ZeroAbi faz a conta ano a ano, de 2026 a 2033, comparando o regime atual com o novo.`,
+      texto: `${favoravel ? "Com crédito sobre quase tudo que compra, a carga da distribuidora cai" : "A carga da distribuidora sobe"} ${pct(Math.abs(sim.resumo.variacaoCarga2027))} em 2027 e ${pct(Math.abs(sim.resumo.variacaoCarga2033))} em 2033. Em outra empresa a conta pode ir para o outro lado. O Fiscal Future faz a conta ano a ano, de 2026 a 2033, comparando o regime atual com o novo.`,
     },
     {
       pergunta: "Que preço eu cobro a partir de janeiro?",
       numero: variacao(sim.resumo.reajusteNecessario2027),
       legenda: "ajuste no preço final que mantém o lucro da distribuidora em 2027",
-      texto: `Em 2033 o ajuste chega a ${variacao(sim.resumo.reajusteNecessario2033)}. Quando a conta é desfavorável e você não repassa, a diferença sai do lucro. O ZeroAbi mostra o novo preço e quanto de lucro se perde se o preço ficar como está.`,
+      texto: `Em 2033 o ajuste chega a ${variacao(sim.resumo.reajusteNecessario2033)}. Quando a conta é desfavorável e você não repassa, a diferença sai do lucro. O Fiscal Future mostra o novo preço e quanto de lucro se perde se o preço ficar como está.`,
     },
     {
       pergunta: "Continuo só no Simples ou recolho IBS e CBS por fora?",
@@ -298,7 +298,7 @@ function Dores() {
         <div className="grid gap-6 border-t border-line pt-8 text-sm leading-relaxed text-muted md:grid-cols-2 md:gap-12">
           <p>
             <span className="font-semibold text-ink">Classificação dos seus produtos por IA.</span>{" "}
-            Descreva o item e o ZeroAbi indica se ele paga a alíquota padrão, tem redução de 30% ou
+            Descreva o item e o Fiscal Future indica se ele paga a alíquota padrão, tem redução de 30% ou
             60%, ou alíquota zero, como os itens da cesta básica.
           </p>
           <p>
@@ -326,7 +326,7 @@ function NotasNoModeloNovo() {
           <article className="border-t border-ink/80 pt-6">
             <h3 className="text-lg font-semibold text-ink">Emissão de NF-e e NFS-e já com IBS e CBS</h3>
             <p className="mt-4 leading-relaxed text-ink/85">
-              O ZeroAbi preenche o CST, o cClassTrib e os valores de IBS e CBS de cada item a partir
+              O Fiscal Future preenche o CST, o cClassTrib e os valores de IBS e CBS de cada item a partir
               da classificação dos seus produtos e serviços. A NFS-e nacional passa a ser obrigatória
               para o Simples em 1º de novembro de 2026, e a partir de 1º de janeiro de 2027 o Simples
               também precisa preencher os campos de IBS e CBS na NF-e.
@@ -373,7 +373,7 @@ function ParaQuem() {
     {
       titulo: "Empresa do Simples que vende para empresas",
       texto:
-        "Seu cliente PJ vai olhar quanto crédito leva ao comprar de você. O ZeroAbi mostra se vale continuar só no DAS ou recolher IBS e CBS por fora, e a partir de que fatia de vendas a empresas a troca compensa.",
+        "Seu cliente PJ vai olhar quanto crédito leva ao comprar de você. O Fiscal Future mostra se vale continuar só no DAS ou recolher IBS e CBS por fora, e a partir de que fatia de vendas a empresas a troca compensa.",
     },
     {
       titulo: "Escritório contábil",
@@ -411,7 +411,7 @@ function PrevisaoPrecos() {
           </h2>
           <p className="mt-4 leading-relaxed text-muted">
             Um estudo de impacto com consultoria custa de R$ 5 mil a R$ 30 mil e fica velho quando a
-            alíquota muda. No ZeroAbi, você refaz a conta sempre que sair um número novo.
+            alíquota muda. No Fiscal Future, você refaz a conta sempre que sair um número novo.
           </p>
           <Link href="/precos" className={`btn-ghost mt-6 ${foco}`}>
             Comparar planos
@@ -451,7 +451,7 @@ function Perguntas() {
           itens={[
             {
               p: "Isso substitui meu contador?",
-              r: "Não. O ZeroAbi é uma ferramenta de estimativa, e funciona melhor nas mãos do contador. Ele confere os dados de entrada, valida a classificação dos produtos e decide com você. Por isso existe um plano feito para escritórios contábeis.",
+              r: "Não. O Fiscal Future é uma ferramenta de estimativa, e funciona melhor nas mãos do contador. Ele confere os dados de entrada, valida a classificação dos produtos e decide com você. Por isso existe um plano feito para escritórios contábeis.",
             },
             {
               p: "De onde vêm as alíquotas, se elas ainda não foram definidas?",
@@ -459,7 +459,7 @@ function Perguntas() {
             },
             {
               p: "Sou do Simples. A reforma me afeta?",
-              r: "Se você vende para consumidor final, muda pouco. Se vende para outras empresas, muda bastante: quem compra de uma empresa no regime regular credita todo o IBS e a CBS, e de quem fica só no DAS credita pouco. O ZeroAbi compara as duas opções com os seus números.",
+              r: "Se você vende para consumidor final, muda pouco. Se vende para outras empresas, muda bastante: quem compra de uma empresa no regime regular credita todo o IBS e a CBS, e de quem fica só no DAS credita pouco. O Fiscal Future compara as duas opções com os seus números.",
             },
             {
               p: "O que é split payment?",

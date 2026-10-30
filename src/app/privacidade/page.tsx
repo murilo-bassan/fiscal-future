@@ -3,14 +3,14 @@ import { Documento } from "@/components/marketing/Documento";
 
 export const metadata: Metadata = {
   title: "Privacidade",
-  description: "Como o ZeroAbi trata os seus dados, de acordo com a LGPD (Lei 13.709/2018).",
+  description: "Como o Fiscal Future trata os seus dados, de acordo com a LGPD (Lei 13.709/2018).",
 };
 
 export default function PrivacidadePage() {
   return (
     <Documento titulo="Política de privacidade" atualizado="30 de outubro de 2026">
       <p>
-        Esta política explica quais dados o ZeroAbi coleta, para que usa e quais são os seus
+        Esta política explica quais dados o Fiscal Future coleta, para que usa e quais são os seus
         direitos, de acordo com a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018).
       </p>
 
@@ -38,7 +38,7 @@ export default function PrivacidadePage() {
         Só com os fornecedores necessários para o serviço funcionar: hospedagem e banco de dados,
         processamento de pagamentos e o provedor de inteligência artificial que classifica produtos
         e serviços (para ele vai apenas a descrição do item). Esses fornecedores só podem usar os
-        dados para prestar o serviço ao ZeroAbi.
+        dados para prestar o serviço ao Fiscal Future.
       </p>
 
       <h2>Por quanto tempo guardamos</h2>

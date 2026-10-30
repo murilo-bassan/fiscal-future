@@ -245,7 +245,7 @@ function gerarXml(
   const corpo = builder.build({ NFe: nfe }) as string;
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    "<!-- Referência gerada pelo ZeroAbi no layout da NT 2025.002 (IBS/CBS). Sem assinatura: não é documento fiscal. -->\n" +
+    "<!-- Referência gerada pelo Fiscal Future no layout da NT 2025.002 (IBS/CBS). Sem assinatura: não é documento fiscal. -->\n" +
     corpo
   );
 }

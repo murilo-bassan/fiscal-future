@@ -1,6 +1,6 @@
-# ZeroAbi
+# Fiscal Future
 
-A Reforma Tributária sem susto. O ZeroAbi mostra para PMEs e escritórios contábeis
+A Reforma Tributária sem susto. O Fiscal Future mostra para PMEs e escritórios contábeis
 quanto a empresa vai pagar com IBS e CBS de 2026 a 2033, que preço cobrar para manter
 a margem, se vale sair do Simples puro para o regime regular de IBS/CBS e quanto caixa
 o split payment vai prender. Também emite NF-e e NFS-e já com IBS/CBS (via emissor homologado)

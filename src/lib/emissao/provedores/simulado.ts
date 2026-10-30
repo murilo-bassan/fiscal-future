@@ -68,7 +68,7 @@ const builder = new XMLBuilder({
 });
 
 const AVISO =
-  "<!-- SEM VALOR FISCAL: documento gerado pelo provedor SIMULADO do ZeroAbi para demonstração. Não foi enviado à SEFAZ nem à prefeitura. -->";
+  "<!-- SEM VALOR FISCAL: documento gerado pelo provedor SIMULADO do Fiscal Future para demonstração. Não foi enviado à SEFAZ nem à prefeitura. -->";
 
 /** ISO com fuso de Brasília (-03:00), como nos XMLs fiscais. */
 function dataHora(d: Date) {
@@ -155,7 +155,7 @@ export function xmlNfe(
             indFinal: d.consumidorFinal ? "1" : "0",
             indPres: "9",
             procEmi: "0",
-            verProc: "ZeroAbi-simulado",
+            verProc: "FiscalFuture-simulado",
           },
           emit: {
             CNPJ: e.cnpj,
@@ -208,7 +208,7 @@ export function xmlNfe(
         "@_versao": "4.00",
         infProt: {
           tpAmb: "2",
-          verAplic: "ZeroAbi-simulado",
+          verAplic: "FiscalFuture-simulado",
           chNFe: p.chave,
           dhRecbto: dataHora(p.emissao),
           nProt: p.protocolo,
@@ -249,7 +249,7 @@ export function xmlNfse(
           infDPS: {
             tpAmb: "2",
             dhEmi: dataHora(p.emissao),
-            verAplic: "ZeroAbi-simulado",
+            verAplic: "FiscalFuture-simulado",
             serie: String(Number(e.serieNfe)),
             nDPS: String(p.numero),
             dCompet: dataHora(p.emissao).slice(0, 10),
@@ -281,7 +281,7 @@ export function xmlNfse(
                   },
                 },
               },
-              // Valores calculados pelo ZeroAbi (na NFS-e real, o Sistema Nacional calcula)
+              // Valores calculados pelo Fiscal Future (na NFS-e real, o Sistema Nacional calcula)
               totCIBS: ib.temGrupo
                 ? {
                     vBC: v2(ib.base),

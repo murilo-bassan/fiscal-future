@@ -9,7 +9,7 @@ import { TabelaPrecos } from "@/components/marketing/TabelaPrecos";
 export const metadata: Metadata = {
   title: "Preços",
   description:
-    "Planos do ZeroAbi para simular o impacto da Reforma Tributária: grátis para começar, planos para PME, grupos de empresas e escritórios contábeis.",
+    "Planos do Fiscal Future para simular o impacto da Reforma Tributária: grátis para começar, planos para PME, grupos de empresas e escritórios contábeis.",
 };
 
 const planos = Object.values(PLANOS);

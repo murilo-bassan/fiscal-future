@@ -8,7 +8,7 @@ export function Header() {
     <header className="border-b border-line bg-paper">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <Link href="/" className={`display text-2xl font-semibold text-ink ${foco}`}>
-          ZeroAbi
+          Fiscal Future
         </Link>
         <nav aria-label="Principal" className="flex items-center gap-1 text-sm sm:gap-4">
           <Link

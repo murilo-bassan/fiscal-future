@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-paper">
       <header className="mx-auto flex max-w-5xl items-center px-4 py-5 sm:px-6">
         <Link href="/" className="display text-xl font-semibold text-ink">
-          ZeroAbi
+          Fiscal Future
         </Link>
       </header>
       <main className="mx-auto grid max-w-5xl gap-10 px-4 pb-16 pt-4 sm:px-6 md:grid-cols-[minmax(0,26rem)_1fr] md:gap-16 md:pt-10">
@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             2033 para manter o lucro de hoje.
           </p>
           <p className="mt-6 max-w-md text-sm text-muted">
-            Você informa números que já tem na contabilidade. O ZeroAbi calcula, ano a ano, quanto a
+            Você informa números que já tem na contabilidade. O Fiscal Future calcula, ano a ano, quanto a
             Reforma Tributária muda os seus impostos, o seu preço e o seu caixa.
           </p>
         </aside>
