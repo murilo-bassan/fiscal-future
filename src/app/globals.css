@@ -1,26 +1,100 @@
 @import "tailwindcss";
 
+/*
+ * ZeroAbi: papel quente, tinta escura, verde-dinheiro como marca e âmbar só
+ * para destaque. Sóbrio o bastante para um contador, claro o bastante para um dono de PME.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --paper: #fafaf7;
+  --surface: #ffffff;
+  --ink: #15181c;
+  --muted: #5d6570;
+  --line: #e3e3dc;
+  --brand: #0d7a5f;
+  --brand-strong: #075e48;
+  --brand-soft: #e3f2ec;
+  --accent: #f0b23a;
+  --accent-soft: #fdf3dd;
+  --bad: #b8431b;
+  --bad-soft: #fbe9e1;
+  --good: #137a3a;
+  --good-soft: #e3f3e8;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --paper: #0f1214;
+    --surface: #171b1e;
+    --ink: #eceee9;
+    --muted: #9aa3ab;
+    --line: #2a3035;
+    --brand: #34b58f;
+    --brand-strong: #5fd0ad;
+    --brand-soft: #12302a;
+    --accent: #f3bf55;
+    --accent-soft: #33290f;
+    --bad: #f08a63;
+    --bad-soft: #3a1f15;
+    --good: #57c47f;
+    --good-soft: #15301f;
   }
 }
 
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "tnum" 1; /* números tabulares: isto aqui é um app de números */
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-strong;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-surface text-ink hover:border-ink/40;
+  }
+  .card {
+    @apply rounded-xl border border-line bg-surface p-5;
+  }
+  .label {
+    @apply block text-sm font-medium text-ink;
+  }
+  .hint {
+    @apply mt-1 text-xs text-muted;
+  }
+  .input {
+    @apply mt-1 block w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20;
+  }
+  .display {
+    font-family: var(--font-fraunces), Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media print {
+  body { background: white; }
+  .no-print { display: none !important; }
 }

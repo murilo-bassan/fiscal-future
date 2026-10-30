@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String          @id @default(cuid())
+  email                String          @unique
+  nome                 String
+  senhaHash            String
+  plano                String          @default("gratis") // gratis | essencial | profissional | contador
+  stripeCustomerId     String?         @unique
+  stripeSubscriptionId String?
+  escritorio           String? // nome exibido nos relatórios (plano contador)
+  createdAt            DateTime        @default(now())
+  empresas             Empresa[]
+  classificacoes       Classificacao[]
+}
+
+model Empresa {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nome      String
+  cnpj      String?
+  perfil    String // JSON de PerfilEmpresa (src/lib/tax/engine.ts)
+  cenarioId String   @default("governo-2024")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Classificacao {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  descricao String
+  resultado String // JSON
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
