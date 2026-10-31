@@ -105,9 +105,9 @@ export function validarArquivo(f: { name: string; size: number; type?: string })
 }
 
 /** Nome do download do XML convertido: só dígitos da chave, para não montar caminho nem cabeçalho estranho. */
-export function nomeArquivo(chave: string, ano: number, ext: "xml" | "csv") {
+export function nomeArquivo(chave: string, ano: number, ext: "xml" | "csv" | "pdf") {
   const c = chave.replace(/\D/g, "").slice(0, 44) || "nota";
-  return ext === "xml" ? `${c}-ibscbs-${ano}.xml` : `${c}-ibscbs-${ano}.csv`;
+  return `${c}-ibscbs-${ano}.${ext}`;
 }
 
 /* ------------------------------------------------- resultado salvo ---- */
@@ -251,7 +251,7 @@ export function lerResultadoSalvo(json: string): ResultadoSalvo | null {
 
 const dec = (v: number) => v.toFixed(2).replace(".", ",");
 
-const ROTULO_ORIGEM: Record<OrigemItem, string> = {
+export const ROTULO_ORIGEM: Record<OrigemItem, string> = {
   usuario: "escolha do usuário",
   nota: "já estava na nota",
   "palavras-chave": "palavras-chave",
@@ -305,4 +305,34 @@ export function montarCsv(r: Pick<ResultadoSalvo, "nota" | "itens">): string {
       ROTULO_ORIGEM[i.origem] ?? i.origem,
     ]),
   ]);
+}
+
+/* -------------------------------------------------------- conferência ---- */
+
+export type Conferencia = { ok: boolean; pendencias: string[] };
+
+const centavos = (vs: number[]) => Math.round(vs.reduce((s, v) => s + v, 0) * 100);
+
+/**
+ * Confere a nota convertida antes de usar o resultado: formato dos códigos do
+ * IBS/CBS, NCM, soma dos itens contra os totais e itens com classificação a conferir.
+ * Não substitui a SEFAZ: só ela autoriza uma nota.
+ */
+export function conferirConversao(r: Pick<ResultadoSalvo, "nota" | "itens" | "totais">): Conferencia {
+  const pendencias: string[] = [];
+  const servico = r.nota.modelo === "nfse";
+  for (const i of r.itens) {
+    const rotulo = `Item ${i.nItem} (${i.descricao.slice(0, 40)})`;
+    if (!/^\d{3}$/.test(i.ibsCbs.cst)) pendencias.push(`${rotulo}: CST do IBS/CBS fora do formato (3 dígitos).`);
+    if (!/^\d{6}$/.test(i.ibsCbs.cClassTrib)) pendencias.push(`${rotulo}: cClassTrib fora do formato (6 dígitos).`);
+    if (!servico && !/^\d{8}$/.test(i.ncm)) pendencias.push(`${rotulo}: NCM precisa de 8 dígitos.`);
+    if (i.conferir) pendencias.push(`${rotulo}: confirme a classificação "${i.categoria.nome}".`);
+  }
+  if (Math.abs(centavos(r.itens.map((i) => i.ibsCbs.total)) - Math.round(r.totais.ibsCbs * 100)) > 2) {
+    pendencias.push("A soma do IBS/CBS dos itens não bate com o total da nota.");
+  }
+  if (Math.abs(centavos(r.itens.map((i) => i.ibsCbs.base)) - Math.round(r.totais.base * 100)) > 2) {
+    pendencias.push("A soma das bases de cálculo dos itens não bate com a base total.");
+  }
+  return { ok: pendencias.length === 0, pendencias };
 }

@@ -16,7 +16,7 @@ npm run dev                # http://localhost:3000
 npm test                   # testes do motor tributário
 ```
 
-Sem `ANTHROPIC_API_KEY`, a classificação de produtos usa busca por palavras-chave.
+Sem `ANTHROPIC_API_KEY`, a classificação de produtos usa busca por palavras-chave e o conversor não lê PDF nem foto (XML, digitação e planilha continuam funcionando).
 Sem `STRIPE_SECRET_KEY`, o checkout fica em modo demonstração (só fora de produção).
 
 Notas "processando" se resolvem sozinhas de dois jeitos:

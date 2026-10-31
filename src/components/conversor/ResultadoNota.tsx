@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ANOS_CONVERSAO, type Ajuste, type ConversaoView } from "./modelo";
+import { ANOS_CONVERSAO, conferirConversao, type Ajuste, type ConversaoView } from "./modelo";
 import { Comparacao } from "./Comparacao";
 import { ItensNota } from "./ItensNota";
 
@@ -53,6 +53,7 @@ export function ResultadoNota({
     }
   }
 
+  const conferencia = conferirConversao(r);
   const base = `/api/converter/${conversao.id}`;
   const empresaVinculada = empresas.find((e) => e.id === conversao.empresaId);
 
@@ -61,7 +62,7 @@ export function ResultadoNota({
       <header className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <h2 id={`nota-${conversao.id}`} className="display text-2xl text-ink">
-            {n.modelo === "65" ? "NFC-e" : "NF-e"} {n.numero}
+            {n.modelo === "65" ? "NFC-e" : n.modelo === "nfse" ? "NFS-e" : "NF-e"} {n.numero}
             <span className="ml-2 text-base text-muted">série {n.serie}</span>
           </h2>
           {n.emissao && <p className="text-sm text-muted">Emitida em {data.format(new Date(n.emissao))}</p>}
@@ -125,7 +126,31 @@ export function ResultadoNota({
         ))}
       </ul>
 
+      <section
+        aria-label="Conferência"
+        className={`rounded-lg px-4 py-3 text-sm text-ink ${conferencia.ok ? "bg-good-soft" : "bg-accent-soft"}`}
+      >
+        <p className="font-semibold">
+          {conferencia.ok
+            ? "Conferência ok: códigos do IBS/CBS no formato, NCM válido e totais batendo com os itens."
+            : `${conferencia.pendencias.length} ${conferencia.pendencias.length === 1 ? "pendência" : "pendências"} antes de usar estes valores`}
+        </p>
+        {!conferencia.ok && (
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {conferencia.pendencias.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-1 text-xs text-muted">
+          A conferência evita erros de cálculo e de código. Quem autoriza uma nota é a SEFAZ ou a prefeitura, na emissão.
+        </p>
+      </section>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <a href={`${base}/pdf`} className="btn-ghost" download>
+          Baixar PDF
+        </a>
         <a href={`${base}/xml`} className="btn-ghost" download>
           Baixar XML no modelo novo
         </a>
