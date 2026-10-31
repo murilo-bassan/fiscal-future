@@ -94,8 +94,11 @@ const so = (s: string, max: number) => s.replace(/\D/g, "").slice(0, max);
 export function FormNota(p: Props) {
   const [estado, enviar, pendente] = useActionState(p.acao, {});
   const ini = p.inicial;
-  const [tipo, setTipo] = useState<TipoNota>(ini?.tipo ?? "nfe");
-  const [natureza, setNatureza] = useState(ini?.naturezaOperacao ?? NATUREZA[ini?.tipo ?? "nfe"]);
+  // Empresa só de serviços (sem inscrição estadual) já abre na NFS-e
+  const tipoInicial: TipoNota =
+    ini?.tipo ?? (p.faltaPorTipo.nfe.length > 0 && p.faltaPorTipo.nfse.length === 0 ? "nfse" : "nfe");
+  const [tipo, setTipo] = useState<TipoNota>(tipoInicial);
+  const [natureza, setNatureza] = useState(ini?.naturezaOperacao ?? NATUREZA[tipoInicial]);
   const [doc, setDoc] = useState(mascararDocumento(ini?.destinatario.documento ?? ""));
   const [nome, setNome] = useState(ini?.destinatario.nome ?? "");
   const [email, setEmail] = useState(ini?.destinatario.email ?? "");
